@@ -13,30 +13,36 @@ Automatically route large-context and shell operations from Claude Code to Gemin
 
 **Solution:** Claude Code autonomously delegates high-token tasks to Gemini CLI (1M tokens, 1000 daily requests, free) via MCP bridge and subagents.
 
-## Architecture
+## Architecture (Router Agent System)
 ```text
-┌─────────────────┐
-│ Claude Code     │ ← Your primary agent (reasoning, design, focused code)
-│ (Token-saving)  │
-└────────┬────────┘
-         │ MCP Bridge
-         ├────────────────────────────┐
-         │                            │
-┌────────▼─────────────┐ ┌────────────▼──────────┐
-│ gemini-large-context │ │ gemini-shell-ops      │
-│ Subagent             │ │ Subagent              │
-│ - Repo analysis      │ │ - Git operations      │
-│ - Large logs         │ │ - npm commands        │
-│ - Multi-file work    │ │ - Build monitoring    │
-└──────────────────────┘ └───────────────────────┘
-       │                                  │
-       └─────────────┬────────────────────┘
-                     │
-              ┌──────▼──────┐
-              │ Gemini CLI  │
-              │ (MCP Tool)  │
-              │ Free 1M ctx │ 
-              └─────────────┘
+┌─────────────────────────────────────────┐
+│ Claude Code (Router Agent)              │
+│ - Intelligent prompt analysis           │
+│ - 3-tier delegation priority system     │
+│ - Token optimization logic              │
+└────────┬────────────────────────────────┘
+         │ Analyzes user prompt
+         ├──────────────────────────────────┬────────────────────┐
+         │                                  │                    │
+    Priority 1:                       Priority 2:          Priority 3:
+    Shell Commands?                   Large Files?         Keywords?
+         │                                  │                    │
+         ▼                                  ▼                    ▼
+┌────────────────────┐         ┌────────────────────┐   Default: Claude
+│ gemini-shell-ops   │         │ gemini-large-context│   (Self-execution)
+│ Subagent           │         │ Subagent            │
+│ - Git ops          │         │ - File analysis     │
+│ - npm commands     │         │ - Repo audits       │
+│ - Build scripts    │         │ - Large logs        │
+└─────────┬──────────┘         └──────────┬─────────┘
+          │                               │
+          └───────────┬───────────────────┘
+                      │ MCP Bridge
+               ┌──────▼──────┐
+               │ Gemini CLI  │
+               │ (MCP Tool)  │
+               │ Free 1M ctx │
+               └─────────────┘
 ```
 ## Prerequisites
 
@@ -116,6 +122,110 @@ Analyze the entire repository for performance bottlenecks
 Claude should automatically spawn `gemini-large-context` subagent → call Gemini CLI MCP → return analysis.
 
 **Note:** All commands in Quick Start should be run from the repository root directory.
+
+## Advanced Delegation Logic (Router Agent)
+
+This repository implements an **intelligent Router Agent system** that automatically analyzes user prompts to determine optimal routing between Claude Code and Gemini CLI.
+
+### How It Works
+
+Instead of simple keyword matching, the Router Agent uses a **3-tier priority system**:
+
+#### Priority 1: Explicit Shell Command Detection
+**Triggers:** Prompt contains actual shell commands
+**Action:** Delegate to `gemini-shell-ops` subagent
+**Detected commands:**
+- Git: `git`, `commit`, `push`, `pull`, `merge`, `branch`, `rebase`
+- npm/yarn: `npm`, `yarn`, `pnpm`, `install`, `build`, `test`, `dev`
+- Docker: `docker`, `kubectl`, `compose`
+- Build tools: `make`, `cmake`, `gradle`, `maven`
+- Unix utils: `ls`, `find`, `grep`, `cat`, `wc`, `sed`, `awk`
+
+**Example:**
+```bash
+User: "git commit -m 'feat: add router agent'"
+→ Detected: `git` command
+→ Action: Delegate to gemini-shell-ops
+```
+
+#### Priority 2: High-Token File Analysis (200+ lines)
+**Triggers:** Prompt mentions file paths AND total line count > 200
+**Action:** Delegate to `gemini-large-context` subagent
+**Detection method:**
+1. Parse prompt for file paths (e.g., `src/auth.js`, `./config.json`)
+2. Calculate total line count across all mentioned files
+3. If total > 200 lines → delegate to Gemini (save Claude tokens)
+4. If total ≤ 200 lines → Claude handles it (faster response)
+
+**Example:**
+```bash
+User: "Analyze auth.js and database.js"
+→ Detected files: auth.js (150 lines) + database.js (100 lines)
+→ Total: 250 lines > 200 threshold
+→ Action: Delegate to gemini-large-context (token optimization)
+```
+
+#### Priority 3: Keyword-Based Triggers (Existing)
+**Triggers:** Keywords like "entire codebase", "all files", "scan", ">5 files"
+**Action:** Delegate to `gemini-large-context` subagent
+
+#### Priority 4: Default to Claude (Self-Execution)
+**Triggers:** None of the above conditions met
+**Action:** Claude handles directly (no delegation)
+**Use cases:** Conceptual questions, small code changes, architecture discussions
+
+**Example:**
+```bash
+User: "Explain the benefits of delegation"
+→ No shell commands detected
+→ No file paths mentioned
+→ No large-scale keywords
+→ Action: Claude responds directly (no delegation needed)
+```
+
+### Token Efficiency Benefits
+
+The Router Agent intelligently saves Claude Pro tokens:
+
+| Scenario | Old Behavior | New Behavior | Tokens Saved |
+|----------|-------------|--------------|--------------|
+| Large file analysis | Load 500+ line files | Delegate to Gemini | ~20K+ tokens |
+| Shell commands | Claude executes | Delegate to Gemini | ~5K tokens |
+| Small files (<200 lines) | Could delegate | Claude handles | 0 tokens (faster!) |
+| Conceptual questions | Could delegate | Claude handles | 0 tokens (faster!) |
+
+### Manual Testing Tool
+
+Use the PowerShell helper to test routing decisions:
+
+```powershell
+# Test shell command detection
+.\scripts\powershell\Invoke-SmartDelegation.ps1 -Prompt "git status"
+# Output: gemini-shell-ops (Priority 1: detected `git`)
+
+# Test file size analysis
+.\scripts\powershell\Invoke-SmartDelegation.ps1 -Prompt "Analyze auth.js and db.js"
+# Output: gemini-cli (Priority 2: if total > 200) or claude-self (if ≤ 200)
+
+# Test default behavior
+.\scripts\powershell\Invoke-SmartDelegation.ps1 -Prompt "Explain MVC pattern"
+# Output: claude-self (Priority 4: no triggers matched)
+```
+
+### Customizing Thresholds
+
+Edit the file size threshold in `.claude/CLAUDE.md`:
+
+```markdown
+#### Priority 2: High-Token File Analysis (200+ lines)
+# Change 200 to your preferred threshold (e.g., 300, 500)
+```
+
+Or use the PowerShell tool with custom threshold:
+
+```powershell
+Invoke-SmartDelegation.ps1 -Prompt "..." -FileThreshold 300
+```
 
 ## Configuration Files
 
