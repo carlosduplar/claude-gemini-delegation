@@ -1,0 +1,68 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Claude: Full Repository Audit",
+      "type": "shell",
+      "command": "claude",
+      "args": [],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "promptOnClose": false
+    },
+    {
+      "label": "Claude: Test Analysis",
+      "type": "shell",
+      "command": "npm",
+      "args": ["test"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Claude: Build Analysis",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Claude: Generate Commit Message",
+      "type": "shell",
+      "command": "git",
+      "args": ["diff", "--cached"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Claude: Documentation Generation",
+      "type": "shell",
+      "command": "claude",
+      "args": [],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Claude: Refactoring Opportunities",
+      "type": "shell",
+      "command": "claude",
+      "args": [],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    }
+  ]
+}
