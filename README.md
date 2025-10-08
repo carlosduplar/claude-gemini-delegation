@@ -69,6 +69,7 @@ npm install -g mcp-gemini-cli
 ```
 
 ### Step 3: Connect Claude Code to Gemini CLI MCP
+**For macOS/Linux:**
 ```text
 claude mcp add-json --scope=user gemini-cli '{
 "type": "stdio",
@@ -76,6 +77,12 @@ claude mcp add-json --scope=user gemini-cli '{
 "args": ["-y", "mcp-gemini-cli"]
 }'
 ```
+
+**For Windows:**
+```text
+claude mcp add-json --scope=user gemini-cli "{"type":"stdio","command":"cmd","args":["/c","npx","-y","mcp-gemini-cli"]}"
+```
+**Note:** Windows requires the `cmd /c` wrapper to execute npx commands properly.
 
 Verify connection:
 
