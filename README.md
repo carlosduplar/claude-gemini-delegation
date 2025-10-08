@@ -61,6 +61,9 @@ gemini # Select OAuth - Personal Google Account
 ```
 
 ### Step 2: Install MCP Gemini CLI wrapper
+
+This project uses [mcp-gemini-cli](https://github.com/DiversioTeam/gemini-cli-mcp) by DiversioTeam to bridge Claude Code with Gemini CLI.
+
 ```text
 npm install -g mcp-gemini-cli
 ```
@@ -425,6 +428,7 @@ Contributions welcome! Areas for improvement:
 ## Credits
 
 - [Gemini CLI](https://github.com/google-gemini/gemini-cli) by Google
+- [MCP Gemini CLI Server](https://github.com/DiversioTeam/gemini-cli-mcp) by DiversioTeam
 - [Claude Code](https://claude.ai/code) by Anthropic
 - [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)
 
