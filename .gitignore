@@ -1,4 +1,28 @@
-  .claude/
-  node_modules/
-  .DS_Store
-  Thumbs.db
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Environment files
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.bak
