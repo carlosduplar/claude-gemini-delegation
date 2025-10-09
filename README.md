@@ -13,36 +13,27 @@ Automatically route large-context and shell operations from Claude Code to Gemin
 
 **Solution:** Claude Code autonomously delegates high-token tasks to Gemini CLI (1M tokens, 1000 daily requests, free) via MCP bridge and subagents.
 
-## Architecture (Router Agent System)
+## Architecture
 ```text
 ┌─────────────────────────────────────────┐
-│ Claude Code (Router Agent)              │
-│ - Intelligent prompt analysis           │
-│ - 3-tier delegation priority system     │
-│ - Token optimization logic              │
+│ Claude Code                              │
+│ - Analyzes task requirements            │
+│ - Delegates large-scale operations      │
 └────────┬────────────────────────────────┘
-         │ Analyzes user prompt
-         ├──────────────────────────────────┬────────────────────┐
-         │                                  │                    │
-    Priority 1:                       Priority 2:          Priority 3:
-    Shell Commands?                   Large Files?         Keywords?
-         │                                  │                    │
-         ▼                                  ▼                    ▼
-┌────────────────────┐         ┌────────────────────┐   Default: Claude
-│ gemini-shell-ops   │         │ gemini-large-context│   (Self-execution)
-│ Subagent           │         │ Subagent            │
-│ - Git ops          │         │ - File analysis     │
-│ - npm commands     │         │ - Repo audits       │
-│ - Build scripts    │         │ - Large logs        │
-└─────────┬──────────┘         └──────────┬─────────┘
-          │                               │
-          └───────────┬───────────────────┘
-                      │ MCP Bridge
-               ┌──────▼──────┐
-               │ Gemini CLI  │
-               │ (MCP Tool)  │
-               │ Free 1M ctx │
-               └─────────────┘
+         │
+         │ Delegates when:
+         │ - Files >200 lines total
+         │ - Entire codebase analysis
+         │ - Shell operations needed
+         │
+         ▼
+┌──────────────────────────────────────────┐
+│ Gemini CLI (via MCP)                     │
+│ - 1M token context window (free)         │
+│ - Large file analysis                    │
+│ - Repository-wide operations             │
+│ - Shell command execution                │
+└──────────────────────────────────────────┘
 ```
 ## Prerequisites
 
@@ -78,11 +69,11 @@ claude mcp add-json --scope=user gemini-cli '{
 }'
 ```
 
-**For Windows:**
-```text
-claude mcp add-json --scope=user gemini-cli "{"type":"stdio","command":"cmd","args":["/c","npx","-y","mcp-gemini-cli"]}"
+**For Windows (PowerShell):**
+```powershell
+claude mcp add-json --scope=user gemini-cli '{"type":"stdio","command":"cmd","args":["/c","npx","-y","mcp-gemini-cli"]}'
 ```
-**Note:** Windows requires the `cmd /c` wrapper to execute npx commands properly.
+**Note:** Windows requires the `cmd /c` wrapper to execute npx commands properly. If you encounter `spawn gemini ENOENT` errors, see [Troubleshooting: spawn gemini ENOENT](docs/troubleshooting.md#spawn-gemini-enoent-error-windows-only).
 
 Verify connection:
 
@@ -96,27 +87,48 @@ Should show gemini-cli listed
 
 ### Step 4: Install subagents
 
-From this repository root:
+Create the subagents directory:
 
-**Linux/macOS (Bash):**
+**Linux/macOS:**
 ```bash
-./scripts/bash/install-subagents.sh
+mkdir -p ~/.claude/agents
 ```
 
 **Windows (PowerShell):**
 ```powershell
-.\scripts\powershell\Install-Subagents.ps1
+New-Item -ItemType Directory -Path "$env:USERPROFILE\.claude\agents" -Force
+```
+
+Copy subagent templates:
+
+**Linux/macOS:**
+```bash
+cp examples/subagents/gemini-large-context.md ~/.claude/agents/
+cp examples/subagents/gemini-shell-ops.md ~/.claude/agents/
+```
+
+**Windows (PowerShell):**
+```powershell
+Copy-Item examples\subagents\gemini-large-context.md $env:USERPROFILE\.claude\agents\
+Copy-Item examples\subagents\gemini-shell-ops.md $env:USERPROFILE\.claude\agents\
 ```
 
 This creates two subagents:
-- `gemini-large-context` - For repository-wide operations
-- `gemini-shell-ops` - For Git, npm, build commands
+- `gemini-large-context` - For large file analysis and repository-wide operations
+- `gemini-shell-ops` - For shell commands (Git, npm, build tools)
 
 ### Step 5: Configure your project
 
 Copy configuration templates to your project:
-```text
+
+**Linux/macOS:**
+```bash
 cp -r examples/project-config/.claude /path/to/your/project/
+```
+
+**Windows (PowerShell):**
+```powershell
+Copy-Item -Recurse examples\project-config\.claude \path\to\your\project\
 ```
 
 Edit `/path/to/your/project/.claude/CLAUDE.md` with your project-specific build commands and tech stack details.
@@ -129,113 +141,32 @@ claude
 Analyze the entire repository for performance bottlenecks
 ```
 
-Claude should automatically spawn `gemini-large-context` subagent → call Gemini CLI MCP → return analysis.
+Claude should detect "entire repository" keyword → delegate to Gemini CLI via subagent → return analysis.
 
 **Note:** All commands in Quick Start should be run from the repository root directory.
 
-## Advanced Delegation Logic (Router Agent)
+## When Claude Delegates to Gemini
 
-This repository implements an **intelligent Router Agent system** that automatically analyzes user prompts to determine optimal routing between Claude Code and Gemini CLI.
+Claude automatically uses Gemini CLI when:
 
-### How It Works
-
-Instead of simple keyword matching, the Router Agent uses a **3-tier priority system**:
-
-#### Priority 1: Explicit Shell Command Detection
-**Triggers:** Prompt contains actual shell commands
-**Action:** Delegate to `gemini-shell-ops` subagent
-**Detected commands:**
-- Git: `git`, `commit`, `push`, `pull`, `merge`, `branch`, `rebase`
-- npm/yarn: `npm`, `yarn`, `pnpm`, `install`, `build`, `test`, `dev`
-- Docker: `docker`, `kubectl`, `compose`
-- Build tools: `make`, `cmake`, `gradle`, `maven`
-- Unix utils: `ls`, `find`, `grep`, `cat`, `wc`, `sed`, `awk`
-
-**Example:**
-```bash
-User: "git commit -m 'feat: add router agent'"
-→ Detected: `git` command
-→ Action: Delegate to gemini-shell-ops
-```
-
-#### Priority 2: High-Token File Analysis (200+ lines)
-**Triggers:** Prompt mentions file paths AND total line count > 200
-**Action:** Delegate to `gemini-large-context` subagent
-**Detection method:**
-1. Parse prompt for file paths (e.g., `src/auth.js`, `./config.json`)
-2. Calculate total line count across all mentioned files
-3. If total > 200 lines → delegate to Gemini (save Claude tokens)
-4. If total ≤ 200 lines → Claude handles it (faster response)
+1. **Large Files** - Total file size exceeds 200 lines
+2. **Entire Codebase** - Keywords like "analyze all files", "entire codebase", "scan repository"
+3. **Shell Operations** - Git commands, npm commands, build scripts
 
 **Example:**
 ```bash
 User: "Analyze auth.js and database.js"
-→ Detected files: auth.js (150 lines) + database.js (100 lines)
-→ Total: 250 lines > 200 threshold
-→ Action: Delegate to gemini-large-context (token optimization)
+→ auth.js (150 lines) + database.js (100 lines) = 250 lines
+→ 250 > 200 threshold → Delegates to Gemini CLI
 ```
 
-#### Priority 3: Keyword-Based Triggers (Existing)
-**Triggers:** Keywords like "entire codebase", "all files", "scan", ">5 files"
-**Action:** Delegate to `gemini-large-context` subagent
+### Token Savings
 
-#### Priority 4: Default to Claude (Self-Execution)
-**Triggers:** None of the above conditions met
-**Action:** Claude handles directly (no delegation)
-**Use cases:** Conceptual questions, small code changes, architecture discussions
-
-**Example:**
-```bash
-User: "Explain the benefits of delegation"
-→ No shell commands detected
-→ No file paths mentioned
-→ No large-scale keywords
-→ Action: Claude responds directly (no delegation needed)
-```
-
-### Token Efficiency Benefits
-
-The Router Agent intelligently saves Claude Pro tokens:
-
-| Scenario | Old Behavior | New Behavior | Tokens Saved |
-|----------|-------------|--------------|--------------|
-| Large file analysis | Load 500+ line files | Delegate to Gemini | ~20K+ tokens |
-| Shell commands | Claude executes | Delegate to Gemini | ~5K tokens |
-| Small files (<200 lines) | Could delegate | Claude handles | 0 tokens (faster!) |
-| Conceptual questions | Could delegate | Claude handles | 0 tokens (faster!) |
-
-### Manual Testing Tool
-
-Use the PowerShell helper to test routing decisions:
-
-```powershell
-# Test shell command detection
-.\scripts\powershell\Invoke-SmartDelegation.ps1 -Prompt "git status"
-# Output: gemini-shell-ops (Priority 1: detected `git`)
-
-# Test file size analysis
-.\scripts\powershell\Invoke-SmartDelegation.ps1 -Prompt "Analyze auth.js and db.js"
-# Output: gemini-cli (Priority 2: if total > 200) or claude-self (if ≤ 200)
-
-# Test default behavior
-.\scripts\powershell\Invoke-SmartDelegation.ps1 -Prompt "Explain MVC pattern"
-# Output: claude-self (Priority 4: no triggers matched)
-```
-
-### Customizing Thresholds
-
-Edit the file size threshold in `.claude/CLAUDE.md`:
-
-```markdown
-#### Priority 2: High-Token File Analysis (200+ lines)
-# Change 200 to your preferred threshold (e.g., 300, 500)
-```
-
-Or use the PowerShell tool with custom threshold:
-
-```powershell
-Invoke-SmartDelegation.ps1 -Prompt "..." -FileThreshold 300
-```
+| Task | Without Gemini | With Gemini | Tokens Saved |
+|------|----------------|-------------|--------------|
+| Large file analysis (500+ lines) | Would exceed Claude limit | Uses Gemini free tier | 20K+ tokens |
+| Full repo audit (500 files) | Impossible | Uses Gemini free tier | 150K+ tokens |
+| Shell commands | Uses Claude tokens | Uses Gemini free tier | 5K tokens |
 
 ## Configuration Files
 
@@ -274,66 +205,42 @@ Location: `<project-root>/.claude/` (any platform)
 claude
 
 Analyze the entire codebase for security vulnerabilities
-
 ```
 
-**What happens:**
-1. Claude detects "entire codebase" keyword
-2. Spawns `gemini-large-context` subagent
-3. Subagent calls Gemini CLI MCP: "Perform security audit of @./"
-4. Gemini processes 1M tokens across all files
-5. Claude synthesizes findings into prioritized list
+Claude detects "entire codebase" → delegates to Gemini CLI → returns security findings
 
 ### Example 2: Test Suite Analysis
 ```text
 Run all tests and analyze any failures
-
 ```
 
-**What happens:**
-1. Claude detects command execution + analysis
-2. Spawns `gemini-shell-ops` subagent
-3. Subagent calls Gemini CLI MCP: "Execute 'npm test' and analyze output"
-4. Gemini runs tests, captures 5K lines of output
-5. Claude presents root causes and fixes
+Claude detects test command → delegates to Gemini CLI → analyzes output and suggests fixes
 
 ### Example 3: Multi-File Refactoring
 ```text
 Refactor authentication logic across all modules to use JWT
-
 ```
 
-**What happens:**
-1. Claude detects "across all modules"
-2. Spawns `gemini-large-context` subagent
-3. Subagent calls Gemini CLI with @./src/ context
-4. Gemini analyzes 50+ files, proposes changes
-5. Claude creates focused file-by-file implementation plan
+Claude detects "across all modules" → delegates large-scale analysis to Gemini CLI → creates implementation plan
 
 ### Example 4: Git History Summary
 ```text
 Create release notes from the last 100 commits
-
 ```
 
-**What happens:**
-1. Claude detects Git operation
-2. Spawns `gemini-shell-ops` subagent
-3. Subagent calls Gemini CLI: "Execute 'git log -100' and categorize changes"
-4. Gemini groups commits by type
-5. Claude formats release notes
+Claude detects Git operation → delegates to Gemini CLI → formats release notes
 
 ## Customization
 
 ### Adjust Delegation Thresholds
 
-Edit `~/.claude/agents/gemini-large-context.md` (user-level config):
-```text
-description: MUST BE USED PROACTIVELY when: analyzing 15+ files, processing logs >2K lines...
+Edit `.claude/CLAUDE.md` in your project to change the 200-line threshold:
+```markdown
+## When to Use Gemini CLI
 
+You MUST use `gemini -p` shell command (via Bash tool) when:
+- Comparing multiple large files (>300 lines total)  # Changed from 200
 ```
-
-Change thresholds to match your workflow.
 
 ### Add Custom Commands
 
@@ -365,6 +272,8 @@ Verify MCP installation
 claude mcp list
 ```
 Reinstall if missing
+
+**Linux/macOS:**
 ```text
 claude mcp remove gemini-cli
 claude mcp add-json --scope=user gemini-cli '{
@@ -372,17 +281,23 @@ claude mcp add-json --scope=user gemini-cli '{
 "command": "npx",
 "args": ["-y", "mcp-gemini-cli"]
 }'
-
 ```
+
+**Windows (PowerShell):**
+```powershell
+claude mcp remove gemini-cli
+claude mcp add-json --scope=user gemini-cli '{"type":"stdio","command":"cmd","args":["/c","npx","-y","mcp-gemini-cli"]}'
+```
+
+If you encounter `spawn gemini ENOENT` errors after reinstalling, see [Troubleshooting: spawn gemini ENOENT](docs/troubleshooting.md#spawn-gemini-enoent-error-windows-only).
 
 ### Subagents not triggering automatically
 
-Check subagent descriptions have strong keywords:
-- "MUST BE USED"
-- "PROACTIVELY"
-- "AUTOMATICALLY"
+Verify the subagent files exist in `~/.claude/agents/`:
+- `gemini-large-context.md`
+- `gemini-shell-ops.md`
 
-Edit `~/.claude/agents/<agent-name>.md` (user-level) and strengthen the `description` field.
+If missing, copy them from `examples/subagents/` directory.
 
 ## Files in This Repository
 
@@ -408,21 +323,8 @@ Edit `~/.claude/agents/<agent-name>.md` (user-level) and strengthen the `descrip
 │ │ └── gemini-shell-ops.md # Shell operations subagent template
 │ └── vscode/
 │ └── tasks.json # VS Code task examples
-├── scripts/
-│ ├── bash/ # Linux/macOS scripts (kebab-case naming)
-│ │ ├── install-subagents.sh # One-command subagent installation
-│ │ ├── test-delegation.sh # Test autonomous delegation
-│ │ └── uninstall.sh # Clean removal
-│ └── powershell/ # Windows scripts (PascalCase naming)
-│   ├── Install-Subagents.ps1 # One-command subagent installation
-│   ├── Test-Delegation.ps1 # Test autonomous delegation
-│   └── Uninstall.ps1 # Clean removal
 └── LICENSE # MIT License
 ```
-
-**Note:** Script naming conventions follow platform standards:
-- Bash scripts use kebab-case (Unix/Linux convention)
-- PowerShell scripts use PascalCase with approved verbs (Microsoft convention)
 
 ## Contributing
 

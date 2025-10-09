@@ -12,7 +12,7 @@ claude mcp list
 
 **Solution:**
 
-**Linux/macOS & Windows (same commands):**
+**Linux/macOS:**
 ```bash
 # Remove existing configuration
 claude mcp remove gemini-cli
@@ -27,6 +27,80 @@ claude mcp add-json --scope=user gemini-cli '{
 # Verify
 claude mcp list
 ```
+
+**Windows (PowerShell):**
+```powershell
+# Remove existing configuration
+claude mcp remove gemini-cli
+
+# Reinstall
+claude mcp add-json --scope=user gemini-cli '{"type":"stdio","command":"cmd","args":["/c","npx","-y","mcp-gemini-cli"]}'
+
+# Verify
+claude mcp list
+```
+
+### "spawn gemini ENOENT" error (Windows only)
+
+**Symptom:**
+```
+Error: spawn gemini ENOENT
+```
+This occurs when the MCP server cannot find the `gemini` executable in its PATH.
+
+**Root Cause:**
+On Windows, the MCP server process doesn't automatically inherit the full system PATH, so it cannot locate the `gemini.cmd` executable installed by npm.
+
+**Solution: Manual PATH configuration**
+
+The `claude mcp add-json` command does not currently support the `env` field for PATH configuration. To manually add PATH configuration:
+
+1. **Locate the npm global bin directory:**
+   ```powershell
+   npm config get prefix
+   # Example output: C:\Users\<username>\AppData\Roaming\npm
+   ```
+
+2. **Edit the Claude Code configuration file:**
+   ```powershell
+   notepad "$env:USERPROFILE\.claude.json"
+   ```
+
+3. **Find the `"gemini-cli"` MCP server configuration** and add the `env` field with PATH:
+   ```json
+   "gemini-cli": {
+     "type": "stdio",
+     "command": "cmd",
+     "args": ["/c", "npx", "-y", "mcp-gemini-cli"],
+     "env": {
+       "PATH": "C:\\Users\\<username>\\AppData\\Roaming\\npm;C:\\Windows\\system32;..."
+     }
+   }
+   ```
+   **Note:** Replace `<username>` with your actual username and include the full system PATH (get it from `$env:PATH` in PowerShell).
+
+4. **Save the file and restart Claude Code.**
+
+**Verification:**
+Test that gemini can be spawned by the subagent:
+```text
+claude
+> Use gemini-shell-ops to run: gemini --version
+```
+
+If this works, the PATH issue is resolved.
+
+**Alternative Solution 3: Ensure npm is in system PATH**
+
+Add npm global bin directory to your system PATH permanently:
+1. Press Win + R, type `sysdm.cpl`, press Enter
+2. Go to "Advanced" tab → "Environment Variables"
+3. Under "User variables", select "Path" → "Edit"
+4. Add: `C:\Users\<username>\AppData\Roaming\npm`
+5. Click OK on all dialogs
+6. Restart Claude Code
+
+This ensures all processes can find `gemini.cmd`.
 
 ### Subagents not appearing
 
@@ -44,11 +118,9 @@ claude
 # Check if files exist
 ls -la ~/.claude/agents/
 
-# If missing, reinstall
-./scripts/bash/install-subagents.sh
-
-# Or manually copy
-cp examples/subagents/*.md ~/.claude/agents/
+# If missing, manually copy from repository
+cp examples/subagents/gemini-large-context.md ~/.claude/agents/
+cp examples/subagents/gemini-shell-ops.md ~/.claude/agents/
 ```
 
 **Windows (PowerShell):**
@@ -56,11 +128,9 @@ cp examples/subagents/*.md ~/.claude/agents/
 # Check if files exist
 Get-ChildItem "$env:USERPROFILE\.claude\agents\"
 
-# If missing, reinstall
-.\scripts\powershell\Install-Subagents.ps1
-
-# Or manually copy
-Copy-Item examples\subagents\*.md "$env:USERPROFILE\.claude\agents\"
+# If missing, manually copy from repository
+Copy-Item examples\subagents\gemini-large-context.md "$env:USERPROFILE\.claude\agents\"
+Copy-Item examples\subagents\gemini-shell-ops.md "$env:USERPROFILE\.claude\agents\"
 ```
 
 ### Gemini CLI authentication failed
@@ -102,51 +172,35 @@ cat ~/.claude/agents/gemini-large-context.md | head -5
 Get-Content "$env:USERPROFILE\.claude\agents\gemini-large-context.md" | Select-Object -First 5
 ```
 
-**Solution 1: Strengthen description**
+**Solution 1: Verify subagent files exist**
 
-Edit `~/.claude/agents/gemini-large-context.md` (user-level):
-```markdown
-***
-description: MUST BE USED PROACTIVELY and AUTOMATICALLY when analyzing 15+ files, processing logs >2K lines, full-repo operations. CRITICAL - Always delegate before main agent attempts large operations.
-***
+Check that files exist in `~/.claude/agents/`:
+```bash
+ls -la ~/.claude/agents/
+# Should show: gemini-large-context.md, gemini-shell-ops.md
+```
+
+If missing, copy from the repository:
+```bash
+cp examples/subagents/*.md ~/.claude/agents/
 ```
 
 **Solution 2: Add project routing rules**
 
-**Linux/macOS:**
-```bash
-# Create .claude/CLAUDE.md in project root
-cat > .claude/CLAUDE.md << 'RULEEOF'
-## Automatic Task Routing
+Create or edit `.claude/CLAUDE.md` in your project root:
+```markdown
+## When to Use Gemini CLI
 
-### Route to gemini-large-context subagent
-When user requests involve:
-- "entire codebase" or "all files"
-- Documentation generation
-- Large log analysis
-- Multi-file refactoring
-RULEEOF
-```
-
-**Windows (PowerShell):**
-```powershell
-# Create .claude/CLAUDE.md in project root
-@"
-## Automatic Task Routing
-
-### Route to gemini-large-context subagent
-When user requests involve:
-- "entire codebase" or "all files"
-- Documentation generation
-- Large log analysis
-- Multi-file refactoring
-"@ | Out-File -FilePath ".claude\CLAUDE.md" -Encoding utf8
+You MUST use `gemini -p` shell command (via Bash tool) when:
+- Analyzing entire codebases or large directories
+- Comparing multiple large files (>200 lines total)
+- User explicitly requests "analyze all files", "scan codebase", "audit project"
 ```
 
 **Solution 3: Use explicit commands**
 
-**Linux/macOS & Windows (same):**
-```bash
+Force delegation explicitly:
+```
 claude
 > Use gemini-large-context to analyze the repository
 ```
@@ -154,21 +208,14 @@ claude
 ### Wrong subagent triggered
 
 **Symptom:**
-`gemini-shell-ops` triggered for analysis task (or vice versa).
+Wrong subagent is being used for the task.
 
 **Solution:**
 
-Add disambiguation in `<project>/.claude/CLAUDE.md` (project-level):
-```markdown
-## Route to gemini-large-context (NOT shell-ops)
-- Code analysis
-- Documentation generation
-- Pattern detection
-
-## Route to gemini-shell-ops (NOT large-context)
-- Git operations
-- npm commands
-- Shell scripts
+Be more explicit in your request or specify the subagent:
+```
+"Use gemini-large-context to analyze the code"
+"Use gemini-shell-ops to run git status"
 ```
 
 ## Gemini CLI Issues
@@ -344,16 +391,11 @@ claude --debug > debug.log 2>&1
 
 2. **Minimal reproduction:**
 
-**Linux/macOS:**
+Create a fresh test project manually to isolate the issue:
 ```bash
-# Create fresh test project
-./scripts/bash/test-delegation.sh
-```
-
-**Windows (PowerShell):**
-```powershell
-# Create fresh test project
-.\scripts\powershell\Test-Delegation.ps1
+cd /tmp
+mkdir test-delegation && cd test-delegation
+cp -r /path/to/claude-gemini-delegation/examples/project-config/.claude .
 ```
 
 3. **Report issue:**
