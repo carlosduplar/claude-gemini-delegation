@@ -147,7 +147,7 @@ This file tells Claude when to delegate to Gemini CLI. See `.claude/CLAUDE.md` i
 
 ## License
 
-MIT License - See [LICENSE](LICENSE.md) file
+MIT License - See [LICENSE](LICENSE) file
 
 ## Support
 
