@@ -1,10 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cat:*)",
-      "Bash(powershell.exe:*)",
-      "mcp__gemini-cli__chat",
-      "Read(//c/Users/carlos.mello/**)"
+      "Bash(gemini:*)"
     ],
     "deny": [],
     "ask": []
