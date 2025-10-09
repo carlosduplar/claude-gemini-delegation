@@ -8,6 +8,7 @@ YOU MUST IMMEDIATELY delegate to `gemini` command via Bash tool when ANY of thes
 2.  **Repository-Wide Analysis:** Requests to "analyze all files," understand the "entire codebase," or "scan the repository."
 3.  **ALL Git Operations:** ANY git command (status, add, commit, push, pull, log, diff, branch, etc.) MUST be executed through Gemini, not directly.
 4.  **ALL Shell Operations:** npm/yarn/pnpm commands, build scripts, test runners, or ANY command-line operations MUST be executed through Gemini.
+5.  **Internet Access & Factual Lookups:** The user's request requires access to real-time information, external documentation, or any knowledge from the public internet.
 
 NEVER execute git commands or shell operations directly. ALWAYS use Gemini as the intermediary.
 
@@ -26,6 +27,12 @@ gemini "Scan the codebase for common security vulnerabilities like hardcoded sec
 gemini "Check git status, then stage all deleted files and the modified .gitignore file using git add commands. Execute: git status && git add -u && git add .gitignore && git status" -y -o json
 gemini "Check git status to see the current state, then push the commit to the remote repository. Execute: git status && git push" -y -o json
 gemini "Stage these files, create a commit with message 'Update documentation', then push. Execute the full workflow." -y -o json
+
+# Internet Access & Factual Lookups - Gemini can search the web for real-time information
+gemini "What are the latest features and breaking changes in Node.js version 22?" --allowed-tools=ReadFile,ReadFolder,ReadManyFiles,FindFiles,SearchText,Shell,GoogleSearch,WebFetch -o json
+gemini "What is the current best practice for implementing authentication in React applications in 2025?" --allowed-tools=ReadFile,ReadFolder,ReadManyFiles,FindFiles,SearchText,Shell,GoogleSearch,WebFetch -o json
+gemini "Find documentation and examples for the latest version of the 'zod' validation library" --allowed-tools=ReadFile,ReadFolder,ReadManyFiles,FindFiles,SearchText,Shell,GoogleSearch,WebFetch -o json
+gemini "What are the performance differences between PostgreSQL and MySQL for high-concurrency workloads?" --allowed-tools=ReadFile,ReadFolder,ReadManyFiles,FindFiles,SearchText,Shell,GoogleSearch,WebFetch -o json
 ```
 
 YOU MUST ALWAYS:
