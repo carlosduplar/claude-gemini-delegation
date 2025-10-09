@@ -51,11 +51,17 @@ Claude delegates when:
 1. **Cross-File Context:** Understanding or modifying code that spans multiple files
 2. **Repository-Wide Analysis:** Keywords like "analyze all files", "entire codebase", "scan repository"
 3. **Shell Operations:** Git commands, npm/package manager commands, build scripts
+4. **Internet Access:** Requests requiring real-time information, documentation lookups, or web searches
 
 **Examples:**
 - `"Audit codebase for security"` → `gemini "Analyze @. for security" --allowed-tools=ReadFile,ReadFolder,ReadManyFiles,FindFiles,SearchText -o json`
-- `"Run tests and analyze failures"` → `gemini "Run npm test and explain failures" -y -o json`
-- `"Get git log from last 100 commits"` → `gemini "Show git log -100 --oneline" -y -o json`
+- `"Run tests and analyze failures"` → `gemini "Run npm test and explain failures" -m gemini-flash-latest -y -o json`
+- `"Get git log from last 100 commits"` → `gemini "Show git log -100 --oneline" -m gemini-flash-latest -y -o json`
+- `"What are the latest features in Node.js 22?"` → `gemini "Find latest Node.js 22 features" -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch -o json`
+
+**Model Selection:**
+- **gemini-flash-latest** (faster, higher rate limits): File summaries, git operations, documentation lookups, procedural tasks
+- **gemini-2.5-pro** (default, more capable): Complex analysis, security audits, architecture reviews, deep reasoning
 
 **Customize:** Edit `.claude/CLAUDE.md` to adjust delegation rules and tool permissions.
 
@@ -85,8 +91,9 @@ Claude Code (analyzes task)
 **Decision logic:**
 1. Cross-file context needed? → Gemini
 2. Keywords: "entire", "all files", "scan repository"? → Gemini
-3. Shell commands: git/npm/build? → Gemini (with `-y` flag)
-4. Otherwise: Claude handles directly
+3. Shell commands: git/npm/build? → Gemini (with `-y` and `-m gemini-flash-latest`)
+4. Internet/documentation lookup needed? → Gemini (with `--allowed-tools=GoogleSearch,WebFetch` and `-m gemini-flash-latest`)
+5. Otherwise: Claude handles directly
 
 ## Configuration
 
