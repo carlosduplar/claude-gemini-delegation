@@ -1,21 +1,14 @@
 {
-  "$schema": "https://json-schema.org/draft-07/schema#",
-  "description": "Gemini CLI configuration with conditional guardrails for Claude Code delegation",
   "profiles": {
     "default_profile": {
-      "description": "Interactive mode - full user control, no automatic restrictions",
       "guardrails": {
-        "enabled": false,
-        "audit_logging": false
+        "enabled": false
       },
       "behavior": {
-        "require_confirmation": "prompt",
-        "allow_destructive_operations": "with_confirmation"
-      },
-      "comment": "This profile is used when user invokes 'gemini' interactively. All operations require manual user confirmation."
+        "require_confirmation": "prompt"
+      }
     },
     "non_interactive_profile": {
-      "description": "Non-interactive mode - automated guardrails for Claude Code delegation",
       "guardrails": {
         "enabled": true,
         "audit_logging": true,
@@ -23,185 +16,40 @@
       },
       "command_rules": {
         "deny_list": [
-          {
-            "pattern": "^rm\\s+-rf\\s+[*./]",
-            "description": "Block mass deletions",
-            "message": "Destructive rm -rf operations prohibited in non-interactive mode"
-          },
-          {
-            "pattern": "^rm\\s+-rf\\s+\\.git",
-            "description": "Block repository deletion",
-            "message": "Repository deletion prohibited"
-          },
-          {
-            "pattern": "^rmdir\\s+/[sq]",
-            "description": "Block Windows mass deletions",
-            "message": "Destructive rmdir operations prohibited"
-          },
-          {
-            "pattern": "^git\\s+clean\\s+-fd",
-            "description": "Block git clean force",
-            "message": "git clean -fd prohibited - use git status first"
-          },
-          {
-            "pattern": "^sudo\\s+",
-            "description": "Block sudo operations",
-            "message": "Elevated privileges prohibited in non-interactive mode"
-          },
-          {
-            "pattern": "\\|\\s*rm",
-            "description": "Block piped deletions",
-            "message": "Piped deletion operations prohibited"
-          },
-          {
-            "pattern": ">\\s*/dev/sd",
-            "description": "Block disk writes",
-            "message": "Direct disk operations prohibited"
-          },
-          {
-            "pattern": "^mkfs",
-            "description": "Block filesystem formatting",
-            "message": "Filesystem operations prohibited"
-          },
-          {
-            "pattern": "^dd\\s+if=/dev/zero",
-            "description": "Block disk wiping",
-            "message": "Disk wiping operations prohibited"
-          },
-          {
-            "pattern": "^chmod\\s+-R\\s+777",
-            "description": "Block dangerous permission changes",
-            "message": "Mass permission changes prohibited"
-          },
-          {
-            "pattern": "^chown\\s+-R",
-            "description": "Block mass ownership changes",
-            "message": "Mass ownership changes prohibited"
-          }
+          { "pattern": "^rm\\s+-rf\\s+[*./]" },
+          { "pattern": "^rm\\s+-rf\\s+\\.git" },
+          { "pattern": "^rmdir\\s+/[sq]" },
+          { "pattern": "^git\\s+clean\\s+-fd" },
+          { "pattern": "^sudo\\s+" },
+          { "pattern": "\\|\\s*rm" },
+          { "pattern": ">\\s*/dev/sd" },
+          { "pattern": "^mkfs" },
+          { "pattern": "^dd\\s+if=/dev/zero" },
+          { "pattern": "^chmod\\s+-R\\s+777" },
+          { "pattern": "^chown\\s+-R" }
         ],
         "allow_list": [
-          {
-            "category": "git_safe",
-            "patterns": [
-              "^git\\s+status",
-              "^git\\s+add",
-              "^git\\s+commit",
-              "^git\\s+push(?!\\s+--force)",
-              "^git\\s+pull",
-              "^git\\s+fetch",
-              "^git\\s+log",
-              "^git\\s+diff",
-              "^git\\s+branch",
-              "^git\\s+checkout\\s+-b",
-              "^git\\s+merge",
-              "^git\\s+stash",
-              "^git\\s+show"
-            ],
-            "description": "Safe git operations that don't modify history or force changes"
-          },
-          {
-            "category": "npm_safe",
-            "patterns": [
-              "^npm\\s+install",
-              "^npm\\s+ci",
-              "^npm\\s+run\\s+build",
-              "^npm\\s+run\\s+test",
-              "^npm\\s+run\\s+dev",
-              "^npm\\s+run\\s+start",
-              "^npm\\s+audit",
-              "^npm\\s+update",
-              "^npm\\s+list",
-              "^npm\\s+outdated"
-            ],
-            "description": "Safe npm operations for dependency management and builds"
-          },
-          {
-            "category": "yarn_safe",
-            "patterns": [
-              "^yarn\\s+install",
-              "^yarn\\s+build",
-              "^yarn\\s+test",
-              "^yarn\\s+dev",
-              "^yarn\\s+start"
-            ],
-            "description": "Safe yarn operations"
-          },
-          {
-            "category": "filesystem_safe",
-            "patterns": [
-              "^mkdir\\s+(?!.*[/\\\\](?:root|system|windows|program))",
-              "^touch\\s+",
-              "^cp\\s+(?!.*\\s+-[rf])",
-              "^mv\\s+",
-              "^ls\\s+",
-              "^cat\\s+",
-              "^grep\\s+",
-              "^find\\s+",
-              "^cd\\s+",
-              "^pwd",
-              "^tree\\s+",
-              "^head\\s+",
-              "^tail\\s+"
-            ],
-            "description": "Safe filesystem operations scoped to project directory"
-          },
-          {
-            "category": "read_only_tools",
-            "patterns": [
-              "ReadFile",
-              "ReadFolder",
-              "ReadManyFiles",
-              "FindFiles",
-              "SearchText",
-              "GoogleSearch",
-              "WebFetch"
-            ],
-            "description": "Read-only MCP tools safe for automation"
-          }
+          { "category": "git_safe", "patterns": ["^git\\s+status", "^git\\s+add", "^git\\s+commit", "^git\\s+push(?!\\s+--force)", "^git\\s+pull", "^git\\s+fetch", "^git\\s+log", "^git\\s+diff", "^git\\s+branch", "^git\\s+checkout\\s+-b", "^git\\s+merge", "^git\\s+stash", "^git\\s+show"] },
+          { "category": "npm_safe", "patterns": ["^npm\\s+install", "^npm\\s+ci", "^npm\\s+run\\s+build", "^npm\\s+run\\s+test", "^npm\\s+run\\s+dev", "^npm\\s+run\\s+start", "^npm\\s+audit", "^npm\\s+update", "^npm\\s+list", "^npm\\s+outdated"] },
+          { "category": "yarn_safe", "patterns": ["^yarn\\s+install", "^yarn\\s+build", "^yarn\\s+test", "^yarn\\s+dev", "^yarn\\s+start"] },
+          { "category": "filesystem_safe", "patterns": ["^mkdir\\s+(?!.*[/\\\\](?:root|system|windows|program))", "^touch\\s+", "^cp\\s+(?!.*\\s+-[rf])", "^mv\\s+", "^ls\\s+", "^cat\\s+", "^grep\\s+", "^find\\s+", "^cd\\s+", "^pwd", "^tree\\s+", "^head\\s+", "^tail\\s+"] },
+          { "category": "read_only_tools", "patterns": ["ReadFile", "ReadFolder", "ReadManyFiles", "FindFiles", "SearchText", "GoogleSearch", "WebFetch"] }
         ],
         "prompt_list": [
-          {
-            "pattern": "^git\\s+reset\\s+--hard",
-            "description": "Destructive history modification",
-            "message": "git reset --hard will discard commits and uncommitted changes",
-            "impact": "permanent_data_loss"
-          },
-          {
-            "pattern": "^git\\s+revert",
-            "description": "Commit reversion",
-            "message": "git revert creates a new commit undoing previous changes",
-            "impact": "history_modification"
-          },
-          {
-            "pattern": "^git\\s+push\\s+--force",
-            "description": "Force push to remote",
-            "message": "Force push can overwrite remote history and affect other developers",
-            "impact": "team_coordination_required"
-          },
-          {
-            "pattern": "^npm\\s+uninstall",
-            "description": "Package removal",
-            "message": "Removing packages may break dependencies",
-            "impact": "dependency_changes"
-          },
-          {
-            "pattern": "^rm\\s+-r(?!f)",
-            "description": "Recursive deletion",
-            "message": "Recursive deletion will remove directories and contents",
-            "impact": "data_loss"
-          }
+          { "pattern": "^git\\s+reset\\s+--hard" },
+          { "pattern": "^git\\s+revert" },
+          { "pattern": "^git\\s+push\\s+--force" },
+          { "pattern": "^npm\\s+uninstall" },
+          { "pattern": "^rm\\s+-r(?!f)" }
         ],
         "file_count_threshold": {
-          "description": "Operations affecting more than this many files require confirmation",
           "value": 10,
           "applies_to": ["git add", "git rm", "rm", "mv", "cp"]
         }
       },
       "tool_restrictions": {
         "WriteFile": {
-          "enabled": false,
-          "reason": "Direct file writes bypass command audit trail",
-          "alternative": "Use Shell tool with 'cat > file << EOF' for reviewable changes"
+          "enabled": false
         }
       },
       "behavior": {
@@ -214,98 +62,17 @@
   "profile_selection": {
     "mode": "auto",
     "detection_logic": {
-      "description": "Automatically select profile based on invocation context",
       "rules": [
-        {
-          "condition": "process.env.GEMINI_INVOKED_BY === 'claude'",
-          "profile": "non_interactive_profile"
-        },
-        {
-          "condition": "!process.stdin.isTTY",
-          "profile": "non_interactive_profile"
-        },
-        {
-          "condition": "args.includes('-p') || args.includes('--headless')",
-          "profile": "non_interactive_profile"
-        },
-        {
-          "condition": "default",
-          "profile": "default_profile"
-        }
+        { "condition": "process.env.GEMINI_INVOKED_BY === 'claude'", "profile": "non_interactive_profile" },
+        { "condition": "!process.stdin.isTTY", "profile": "non_interactive_profile" },
+        { "condition": "args.includes('-p') || args.includes('--headless')", "profile": "non_interactive_profile" },
+        { "condition": "default", "profile": "default_profile" }
       ]
-    },
-    "override": {
-      "description": "Force a specific profile (for testing or special cases)",
-      "value": null,
-      "allowed_values": ["default_profile", "non_interactive_profile", null]
     }
   },
   "audit": {
     "enabled_for_profiles": ["non_interactive_profile"],
     "log_format": "json",
-    "log_path": "~/.gemini/audit.log",
-    "log_rotation": {
-      "enabled": true,
-      "max_size_mb": 10,
-      "max_files": 5
-    },
-    "log_fields": [
-      "timestamp",
-      "mode",
-      "invoked_by",
-      "command",
-      "action",
-      "executed",
-      "exit_code",
-      "error_message"
-    ],
-    "example_entry": {
-      "timestamp": "2025-10-10T14:30:00Z",
-      "mode": "non_interactive",
-      "invoked_by": "claude",
-      "command": "git push",
-      "action": "allow",
-      "executed": true,
-      "exit_code": 0
-    }
-  },
-  "response_format": {
-    "description": "JSON response structure for programmatic consumers",
-    "schemas": {
-      "success": {
-        "status": "success",
-        "command": "string",
-        "output": "string",
-        "mode": "string",
-        "timestamp": "ISO8601"
-      },
-      "denied": {
-        "status": "denied",
-        "command": "string",
-        "reason": "string",
-        "suggestion": "string",
-        "mode": "string",
-        "timestamp": "ISO8601"
-      },
-      "requires_confirmation": {
-        "status": "requires_confirmation",
-        "command": "string",
-        "reason": "string",
-        "impact": "string",
-        "mode": "string",
-        "timestamp": "ISO8601"
-      }
-    }
-  },
-  "installation": {
-    "description": "How to install this configuration",
-    "steps": [
-      "Copy this file to ~/.gemini/settings.json",
-      "Copy .gemini/GEMINI.md to ~/.gemini/GEMINI.md",
-      "Ensure Claude Code sets GEMINI_INVOKED_BY=claude before invoking Gemini",
-      "Test with: GEMINI_INVOKED_BY=claude gemini -p 'test command' -y -o json"
-    ]
-  },
-  "version": "1.0.0",
-  "last_updated": "2025-10-10"
+    "log_path": "~/.gemini/audit.log"
+  }
 }
