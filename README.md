@@ -105,7 +105,7 @@ This file tells Claude when to delegate to Gemini CLI. See `.claude/CLAUDE.md` i
 
 ### Guardrail System
 
-Gemini CLI has built-in security guardrails that apply when Claude Code invokes it:
+GEMINI.md and settings.json provide Gemini CLI security guardrails that apply when Claude Code invokes it:
 
 **ALLOWED (Auto-execute):**
 - Git: status, add, commit, push (non-force), pull, fetch, log, diff, branch, merge, stash
