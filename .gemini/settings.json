@@ -29,9 +29,9 @@
           { "pattern": "^chown\\s+-R" }
         ],
         "allow_list": [
-          { "category": "git_safe", "patterns": ["^git\\s+status", "^git\\s+add", "^git\\s+commit", "^git\\s+push(?!\\s+--force)", "^git\\s+pull", "^git\\s+fetch", "^git\\s+log", "^git\\s+diff", "^git\\s+branch", "^git\\s+checkout\\s+-b", "^git\\s+merge", "^git\\s+stash", "^git\\s+show"] },
-          { "category": "npm_safe", "patterns": ["^npm\\s+install", "^npm\\s+ci", "^npm\\s+run\\s+build", "^npm\\s+run\\s+test", "^npm\\s+run\\s+dev", "^npm\\s+run\\s+start", "^npm\\s+audit", "^npm\\s+update", "^npm\\s+list", "^npm\\s+outdated"] },
-          { "category": "yarn_safe", "patterns": ["^yarn\\s+install", "^yarn\\s+build", "^yarn\\s+test", "^yarn\\s+dev", "^yarn\\s+start"] },
+          { "category": "git_safe", "patterns": ["^git\\s+(status|add|commit|push(?!\\s+--force)|pull|fetch|log|diff|branch|checkout\\s+-b|merge|stash|show)"] },
+          { "category": "npm_safe", "patterns": ["^npm\\s+(install|ci|run\\s+(build|test|dev|start)|audit|update|list|outdated)"] },
+          { "category": "yarn_safe", "patterns": ["^yarn\\s+(install|build|test|dev|start)"] },
           { "category": "filesystem_safe", "patterns": ["^mkdir\\s+(?!.*[/\\\\](?:root|system|windows|program))", "^touch\\s+", "^cp\\s+(?!.*\\s+-[rf])", "^mv\\s+", "^ls\\s+", "^cat\\s+", "^grep\\s+", "^find\\s+", "^cd\\s+", "^pwd", "^tree\\s+", "^head\\s+", "^tail\\s+"] },
           { "category": "read_only_tools", "patterns": ["ReadFile", "ReadFolder", "ReadManyFiles", "FindFiles", "SearchText", "GoogleSearch", "WebFetch"] }
         ],

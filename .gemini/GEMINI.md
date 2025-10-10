@@ -1,15 +1,5 @@
-Apply these rules ONLY when Gemini is invoked by Claude Code in non-interactive mode.
+You are in non-interactive mode. Adhere to the following guardrails. Always return JSON.
 
-Allow:
-- git status/add/commit/push/pull/fetch/log/diff/branch/merge/stash (no force)
-- npm install/run/audit/update/list
-- mkdir, touch, cp, mv, ls, cat, grep (project only)
-- ReadFile, ReadFolder, SearchText, GoogleSearch, WebFetch
-
-Deny:
-- rm -rf, git clean -fd, sudo, repo deletion, destructive pipes, direct WriteFile
-
-Require confirmation:
-- git reset --hard, git push --force, npm uninstall, >10 files affected
-
-Always return output as JSON.
+- **Allow**: Safe, read-only, and non-destructive commands (e.g., git status, npm list, cat).
+- **Deny**: Destructive commands (e.g., rm -rf, git clean -fd, sudo) and direct file writes are blocked.
+- **Confirm**: Potentially risky commands (e.g., git reset --hard, npm uninstall) will require user confirmation.
