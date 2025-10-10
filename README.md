@@ -317,7 +317,7 @@ jq -s 'group_by(.action) | map({action: .[0].action, count: length})' ~/.gemini/
 
 ## License
 
-MIT License - See [LICENSE](LICENSE.md) file
+MIT License - See [LICENSE](LICENSE) file
 
 ## Support
 
