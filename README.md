@@ -2,7 +2,7 @@
 
 Automatically delegate cross-file, repository-wide, and shell tasks from Claude Code to Gemini CLI, optimizing token usage across both AI assistants.
 
-**Problem:** Claude Pro caps at ~44K tokens/5h. Power users hit limits during repo-wide analysis, multi-file operations, or shell automation.
+**Problem:** Claude Pro caps at ~19K tokens/5h. Power users hit limits during repo-wide analysis, multi-file operations, or shell automation.
 
 **Solution:** Claude autonomously routes high-token tasks to Gemini CLI (1M tokens/day, 1000 req/day, free tier available).
 
@@ -97,27 +97,56 @@ Claude Code (analyzes task)
 
 ## Configuration
 
+### Core Delegation Rules
+
 Location: `<project-root>/.claude/CLAUDE.md`
 
 This file tells Claude when to delegate to Gemini CLI. See `.claude/CLAUDE.md` in this repo for the template.
+
+### Guardrail System
+
+Gemini CLI has built-in security guardrails that apply when Claude Code invokes it:
+
+**ALLOWED (Auto-execute):**
+- Git: status, add, commit, push (non-force), pull, fetch, log, diff, branch, merge, stash
+- NPM: install, run build/test/dev, audit, update, list
+- Filesystem: mkdir, touch, cp, mv, ls, cat, grep (project scope)
+- Read-only: ReadFile, ReadFolder, SearchText, GoogleSearch, WebFetch
+
+**DENIED (Auto-block):**
+- rm -rf (mass deletions)
+- Repository deletion (rm -rf .git)
+- git clean -fd, sudo operations
+- Destructive piped commands
+- Direct file writes via WriteFile tool
+
+**REQUIRES CONFIRMATION:**
+- git reset --hard, git push --force
+- npm uninstall
+- Operations affecting >10 files
 
 ## Files in This Repository
 
 ```text
 .
-├── README.md           # This file
+├── README.md                # This file
 ├── .claude/
-│   └── CLAUDE.md       # Delegation rules template
-└── LICENSE             # MIT License
+│   └── CLAUDE.md           # Claude Code delegation rules
+├── .gemini/
+│   ├── GEMINI.md           # Gemini guardrail instructions
+│   └── settings.json       # Profile-based guardrail configuration
+└── LICENSE                 # MIT License
 ```
 
 ## Key Features
 
 - **Automatic Delegation:** Claude detects when to use Gemini based on configurable rules
-- **Secure Tool Usage:** Use `--allowed-tools` for read-only operations or `-y` for shell commands
+- **Conditional Guardrails:** Security restrictions apply only in non-interactive mode, preserving full control for users
+- **Secure Tool Usage:** Use `--allowed-tools` for read-only operations or `-y` for shell commands with guardrails
 - **Structured Output:** All Gemini responses return JSON for easy parsing
-- **Customizable Rules:** Edit `.claude/CLAUDE.md` to adjust delegation behavior
+- **Customizable Rules:** Edit `.claude/CLAUDE.md` and `.gemini/GEMINI.md` to adjust delegation and security behavior
 - **Model Optimization:** Intelligently routes simple tasks to gemini-flash-latest for speed and rate limit conservation
+- **Audit Logging:** Track all non-interactive operations for security review and debugging
 
 ## Performance Impact
 
@@ -139,6 +168,147 @@ This file tells Claude when to delegate to Gemini CLI. See `.claude/CLAUDE.md` i
 - Leverage Gemini's 1M tokens/day free tier for high-volume operations
 - Faster execution for procedural tasks (git, npm, searches)
 - Reserve Claude's context for high-value tasks: code generation, architecture decisions, complex reasoning
+
+## Guardrail Architecture
+
+### Design Philosophy
+
+The guardrail system is designed to:
+1. **Prevent accidental destruction** when Claude Code automates workflows
+2. **Preserve user autonomy** in interactive sessions
+3. **Maintain transparency** through audit logging
+4. **Allow customization** for different security requirements
+
+### How It Works
+
+```text
+Claude Code Request
+    |
+    v
+Set GEMINI_INVOKED_BY=claude
+    |
+    v
+Gemini CLI (detects non-interactive mode)
+    |
+    v
+Load non_interactive_profile from settings.json
+    |
+    v
+Evaluate command against:
+    1. DENY list --> Abort with JSON error
+    2. ALLOW list --> Execute safely
+    3. PROMPT list --> Request user confirmation
+    4. Default --> Request confirmation
+    |
+    v
+Log to audit.log (timestamp, command, action, result)
+    |
+    v
+Return JSON response to Claude Code
+```
+
+### Example Workflow: Safe Git Push
+
+**User Request:** "Commit and push changes"
+
+**Claude Code Action:**
+```bash
+export GEMINI_INVOKED_BY=claude && gemini "Stage all changes, commit with message 'Update docs', and push to remote" -m gemini-flash-latest -y -o json
+```
+
+**Gemini Evaluation:**
+1. Detects `GEMINI_INVOKED_BY=claude` → Load guardrails
+2. Parses commands: `git add -A && git commit -m "Update docs" && git push`
+3. Checks each command:
+   - `git add -A` → ALLOW list → Execute
+   - `git commit` → ALLOW list → Execute
+   - `git push` → ALLOW list → Execute
+4. Logs to audit.log: `{"timestamp": "...", "command": "git push", "action": "allow", "executed": true}`
+5. Returns: `{"status": "success", "output": "...", "mode": "non_interactive"}`
+
+### Example Workflow: Blocked Destruction
+
+**User Request:** "Clean up the repository completely"
+
+**Claude Code Action:**
+```bash
+export GEMINI_INVOKED_BY=claude && gemini "Remove all untracked files and directories: git clean -fd" -y -o json
+```
+
+**Gemini Evaluation:**
+1. Detects `GEMINI_INVOKED_BY=claude` → Load guardrails
+2. Parses command: `git clean -fd`
+3. Matches DENY list pattern: `^git\\s+clean\\s+-fd`
+4. Returns: `{"status": "denied", "reason": "git clean -fd prohibited - use git status first", "mode": "non_interactive"}`
+5. Logs to audit.log: `{"timestamp": "...", "command": "git clean -fd", "action": "deny", "executed": false}`
+
+**Claude Code Response:** "The command 'git clean -fd' was denied by guardrails. This destructive operation is not allowed in automated mode. Please run 'gemini' interactively to perform this action with manual confirmation."
+
+### Customization
+
+Edit `~/.gemini/settings.json` to customize guardrails:
+
+**Add custom allow pattern:**
+```json
+{
+  "profiles": {
+    "non_interactive_profile": {
+      "command_rules": {
+        "allow_list": [
+          {
+            "category": "custom_scripts",
+            "patterns": [
+              "^./scripts/deploy\\.sh",
+              "^npm run deploy"
+            ],
+            "description": "Allow custom deployment scripts"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+**Add custom deny pattern:**
+```json
+{
+  "profiles": {
+    "non_interactive_profile": {
+      "command_rules": {
+        "deny_list": [
+          {
+            "pattern": "^docker\\s+system\\s+prune\\s+-a",
+            "description": "Block docker system prune in automation",
+            "message": "Docker system prune requires manual review"
+          }
+        ]
+      }
+    }
+  }
+}
+```
+
+### Audit Log Analysis
+
+View recent non-interactive operations:
+```bash
+# Show last 20 entries
+tail -20 ~/.gemini/audit.log | jq '.'
+
+# Find all denied commands
+grep '"action":"deny"' ~/.gemini/audit.log | jq '.'
+
+# Show commands from specific date
+grep '2025-10-10' ~/.gemini/audit.log | jq '.'
+
+# Count operations by action
+jq -s 'group_by(.action) | map({action: .[0].action, count: length})' ~/.gemini/audit.log
+```
+
+## Complementary Tools
+
+- [Claude Code Usage Monitor](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor) is quite handy for tracking token consumption in near real-time and historical trends.
 
 ## Credits
 

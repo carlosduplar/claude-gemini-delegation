@@ -26,6 +26,3 @@ Desktop.ini
 # Temporary files
 *.tmp
 *.bak
-
-# Claude local settings
-.claude/settings.local.json
