@@ -54,10 +54,10 @@ Claude delegates when:
 4. **Internet Access:** Requests requiring real-time information, documentation lookups, or web searches
 
 **Examples:**
-- `"Audit codebase for security"` → `gemini "Analyze @. for security" --allowed-tools=ReadFile,ReadFolder,ReadManyFiles,FindFiles,SearchText -o json`
+- `"Audit codebase for security"` → `gemini "Analyze @. for security" --allowed-tools=ReadFile,ReadFolder,SearchText -o json`
 - `"Run tests and analyze failures"` → `gemini "Run npm test and explain failures" -m gemini-flash-latest -y -o json`
 - `"Get git log from last 100 commits"` → `gemini "Show git log -100 --oneline" -m gemini-flash-latest -y -o json`
-- `"What are the latest features in Node.js 22?"` → `gemini "Find latest Node.js 22 features" -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch -o json`
+- `"What are the latest features in Node.js 22?"` → `gemini "Find latest features in Node.js 22" -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch -o json`
 
 **Model Selection:**
 - **gemini-flash-latest** (faster, higher rate limits): File summaries, git operations, documentation lookups, procedural tasks
@@ -108,22 +108,24 @@ This file tells Claude when to delegate to Gemini CLI. See `.claude/CLAUDE.md` i
 GEMINI.md and settings.json provide Gemini CLI security guardrails that apply when Claude Code invokes it:
 
 **ALLOWED (Auto-execute):**
-- Git: status, add, commit, push (non-force), pull, fetch, log, diff, branch, merge, stash
-- NPM: install, run build/test/dev, audit, update, list
-- Filesystem: mkdir, touch, cp, mv, ls, cat, grep (project scope)
-- Read-only: ReadFile, ReadFolder, SearchText, GoogleSearch, WebFetch
+- Git: `status`, `add`, `commit`, `push` (non-force), `pull`, `fetch`, `log`, `diff`, `branch`, `checkout -b`, `merge`, `stash`, `show`
+- NPM: `install`, `ci`, `run build/test/dev/start`, `audit`, `update`, `list`, `outdated`
+- Filesystem: `mkdir`, `touch`, `cp`, `mv`, `ls`, `cat`, `grep`, `find`, `cd`, `pwd`, `tree`, `head`, `tail` (with safe path restrictions)
+- Read-only Tools: `ReadFile`, `ReadFolder`, `ReadManyFiles`, `FindFiles`, `SearchText`, `GoogleSearch`, `WebFetch`
 
 **DENIED (Auto-block):**
-- rm -rf (mass deletions)
-- Repository deletion (rm -rf .git)
-- git clean -fd, sudo operations
-- Destructive piped commands
-- Direct file writes via WriteFile tool
+- Mass deletions (`rm -rf`, `rmdir /s`)
+- Repository deletion (`rm -rf .git`)
+- Destructive git commands (`git clean -fd`)
+- System-level changes (`sudo`, `mkfs`, `dd`, `chmod -R 777`, `chown -R`)
+- Destructive piped commands (`| rm`)
+- Direct file writes with the `WriteFile` tool
 
 **REQUIRES CONFIRMATION:**
-- git reset --hard, git push --force
-- npm uninstall
-- Operations affecting >10 files
+- `git reset --hard`, `git revert`, `git push --force`
+- `npm uninstall`
+- `rm -r` (recursive delete)
+- Operations affecting >10 files (e.g., `git add`, `rm`)
 
 ## Files in This Repository
 
