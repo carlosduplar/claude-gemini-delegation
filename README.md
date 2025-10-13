@@ -63,7 +63,7 @@ Claude delegates when:
 - **gemini-flash-latest** (faster, higher rate limits): File summaries, git operations, documentation lookups, procedural tasks
 - **gemini-2.5-pro** (default, more capable): Complex analysis, security audits, architecture reviews, deep reasoning
 
-**Customize:** Edit `.claude/CLAUDE.md` to adjust delegation rules and tool permissions.
+**Customize:** Edit `.claude/CLAUDE.md` (16 lines) to adjust delegation rules and tool permissions. The provided version is intentionally minimal.
 
 ## Architecture
 
@@ -101,11 +101,11 @@ Claude Code (analyzes task)
 
 Location: `<project-root>/.claude/CLAUDE.md`
 
-This file tells Claude when to delegate to Gemini CLI. See `.claude/CLAUDE.md` in this repo for the template.
+This file (16 lines, ultra-compact) tells Claude when to delegate to Gemini CLI. The actual implementation in this repo is minimal - see `.claude/CLAUDE.md`.
 
 ### Guardrail System
 
-GEMINI.md and settings.json provide Gemini CLI security guardrails that apply when Claude Code invokes it:
+`.gemini/GEMINI.md` (4 lines) and `.gemini/settings.json` (71 lines) provide Gemini CLI security guardrails that apply when Claude Code invokes it:
 
 **ALLOWED (Auto-execute):**
 - Git: `status`, `add`, `commit`, `push` (non-force), `pull`, `fetch`, `log`, `diff`, `branch`, `checkout -b`, `merge`, `stash`, `show`
@@ -131,13 +131,15 @@ GEMINI.md and settings.json provide Gemini CLI security guardrails that apply wh
 
 ```text
 .
-├── README.md                # This file
+├── README.md                      # This file
 ├── .claude/
-│   └── CLAUDE.md           # Claude Code delegation rules
+│   ├── CLAUDE.md                 # Claude Code delegation rules (16 lines - ultra-compact)
+│   └── settings.local.json       # Optional local Claude settings override
 ├── .gemini/
-│   ├── GEMINI.md           # Gemini guardrail instructions
-│   └── settings.json       # Profile-based guardrail configuration
-└── LICENSE                 # MIT License
+│   ├── GEMINI.md                 # Gemini guardrail instructions (4 lines - minimal)
+│   └── settings.json             # Profile-based guardrail configuration (71 lines)
+├── .gitignore                    # Standard ignore patterns
+└── LICENSE                       # MIT License
 ```
 
 ## Key Features
@@ -146,7 +148,7 @@ GEMINI.md and settings.json provide Gemini CLI security guardrails that apply wh
 - **Conditional Guardrails:** Security restrictions apply only in non-interactive mode, preserving full control for users
 - **Secure Tool Usage:** Use `--allowed-tools` for read-only operations or `-y` for shell commands with guardrails
 - **Structured Output:** All Gemini responses return JSON for easy parsing
-- **Customizable Rules:** Edit `.claude/CLAUDE.md` and `.gemini/GEMINI.md` to adjust delegation and security behavior
+- **Customizable Rules:** Edit `.claude/CLAUDE.md` (16 lines) and `.gemini/GEMINI.md` (4 lines) to adjust delegation and security behavior
 - **Model Optimization:** Intelligently routes simple tasks to gemini-flash-latest for speed and rate limit conservation
 - **Audit Logging:** Track all non-interactive operations for security review and debugging
 
@@ -187,7 +189,7 @@ The guardrail system is designed to:
 Claude Code Request
     |
     v
-Set GEMINI_INVOKED_BY=claude
+Set REFERRAL=claude
     |
     v
 Gemini CLI (detects non-interactive mode)
@@ -203,9 +205,6 @@ Evaluate command against:
     4. Default --> Request confirmation
     |
     v
-Log to audit.log (timestamp, command, action, result)
-    |
-    v
 Return JSON response to Claude Code
 ```
 
@@ -215,11 +214,11 @@ Return JSON response to Claude Code
 
 **Claude Code Action:**
 ```bash
-export GEMINI_INVOKED_BY=claude && gemini "Stage all changes, commit with message 'Update docs', and push to remote" -m gemini-flash-latest -y -o json
+export REFERRAL=claude && gemini "Stage all changes, commit with message 'Update docs', and push to remote" -m gemini-flash-latest -y -o json
 ```
 
 **Gemini Evaluation:**
-1. Detects `GEMINI_INVOKED_BY=claude` → Load guardrails
+1. Detects `REFERRAL=claude` → Load guardrails
 2. Parses commands: `git add -A && git commit -m "Update docs" && git push`
 3. Checks each command:
    - `git add -A` → ALLOW list → Execute
@@ -234,11 +233,11 @@ export GEMINI_INVOKED_BY=claude && gemini "Stage all changes, commit with messag
 
 **Claude Code Action:**
 ```bash
-export GEMINI_INVOKED_BY=claude && gemini "Remove all untracked files and directories: git clean -fd" -y -o json
+export REFERRAL=claude && gemini "Remove all untracked files and directories: git clean -fd" -y -o json
 ```
 
 **Gemini Evaluation:**
-1. Detects `GEMINI_INVOKED_BY=claude` → Load guardrails
+1. Detects `REFERRAL=claude` → Load guardrails
 2. Parses command: `git clean -fd`
 3. Matches DENY list pattern: `^git\\s+clean\\s+-fd`
 4. Returns: `{"status": "denied", "reason": "git clean -fd prohibited - use git status first", "mode": "non_interactive"}`
@@ -248,7 +247,7 @@ export GEMINI_INVOKED_BY=claude && gemini "Remove all untracked files and direct
 
 ### Customization
 
-Edit `~/.gemini/settings.json` to customize guardrails:
+Edit `.gemini/settings.json` (project-level) or `~/.gemini/settings.json` (user-level) to customize guardrails:
 
 **Add custom allow pattern:**
 ```json
@@ -291,32 +290,6 @@ Edit `~/.gemini/settings.json` to customize guardrails:
 }
 ```
 
-### Audit Log Analysis
-
-View recent non-interactive operations:
-```bash
-# Show last 20 entries
-tail -20 ~/.gemini/audit.log | jq '.'
-
-# Find all denied commands
-grep '"action":"deny"' ~/.gemini/audit.log | jq '.'
-
-# Show commands from specific date
-grep '2025-10-10' ~/.gemini/audit.log | jq '.'
-
-# Count operations by action
-jq -s 'group_by(.action) | map({action: .[0].action, count: length})' ~/.gemini/audit.log
-```
-
-## Complementary Tools
-
-- [Claude Code Usage Monitor](https://github.com/Maciek-roboblog/Claude-Code-Usage-Monitor) is quite handy for tracking token consumption in near real-time and historical trends.
-
-## Credits
-
-- [Gemini CLI](https://github.com/google-gemini/gemini-cli) by Google
-- [Claude Code](https://claude.ai/code) by Anthropic
-
 ## License
 
 MIT License - See [LICENSE](LICENSE) file
@@ -328,4 +301,4 @@ MIT License - See [LICENSE](LICENSE) file
 
 ---
 
-**Last Updated:** October 9, 2025
+**Last Updated:** October 13, 2025

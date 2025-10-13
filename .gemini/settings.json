@@ -10,9 +10,7 @@
     },
     "non_interactive_profile": {
       "guardrails": {
-        "enabled": true,
-        "audit_logging": true,
-        "audit_log_path": "~/.gemini/audit.log"
+        "enabled": true
       },
       "command_rules": {
         "deny_list": [
@@ -63,16 +61,11 @@
     "mode": "auto",
     "detection_logic": {
       "rules": [
-        { "condition": "process.env.GEMINI_INVOKED_BY === 'claude'", "profile": "non_interactive_profile" },
+        { "condition": "process.env.REFERRAL === 'claude'", "profile": "non_interactive_profile" },
         { "condition": "!process.stdin.isTTY", "profile": "non_interactive_profile" },
         { "condition": "args.includes('-p') || args.includes('--headless')", "profile": "non_interactive_profile" },
         { "condition": "default", "profile": "default_profile" }
       ]
     }
-  },
-  "audit": {
-    "enabled_for_profiles": ["non_interactive_profile"],
-    "log_format": "json",
-    "log_path": "~/.gemini/audit.log"
   }
 }

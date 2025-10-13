@@ -4,8 +4,8 @@ Delegate to Gemini CLI if:
 - Web/doc lookups
 
 Flags:
-- Model: -m gemini-flash-latest (simple tasks: faster, cheaper)
-- Env: GEMINI_INVOKED_BY=claude
+- Model: -m gemini-flash-latest (for simple tasks or fallback if gemini-2.5-pro quota exceeded)
+- Env: REFERRAL=claude
 - Output: -o json
 - Shell/git: -y
 - Read-only: --allowed-tools=ReadFile,ReadFolder,SearchText,GoogleSearch,WebFetch
