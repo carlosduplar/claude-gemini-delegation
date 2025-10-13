@@ -1,16 +1,9 @@
-Delegate to Gemini CLI if:
-- Multi-file/repo tasks
-- Git/shell commands
-- Web/doc lookups
+MANDATORY: Delegate ALL git/shell/multi-file/web tasks to Gemini CLI. NEVER use Bash for those. Chain related operations in single Gemini call using && or ;
 
 Flags:
-- Model: -m gemini-flash-latest (for simple tasks or fallback if gemini-2.5-pro quota exceeded)
-- Env: REFERRAL=claude
+- Model: -m gemini-2.5-pro (default) OR -m gemini-flash-latest (simple tasks/quota fallback)
+- Env: export REFERRAL=claude
 - Output: -o json
-- Shell/git: -y
-- Read-only: --allowed-tools=ReadFile,ReadFolder,SearchText,GoogleSearch,WebFetch
+- Shell: -y OR read-only: --allowed-tools=ReadFile,ReadFolder,ReadManyFiles,FindFiles,SearchText,Shell,GoogleSearch,WebFetch
 
-Never: rm -rf, git clean -fd, sudo
-Confirm: force push, reset, del >10 files
-
-Claude handles: single-file edits, code gen, conceptual Q&A
+Claude only: single-file edits, code gen, Q&A.
