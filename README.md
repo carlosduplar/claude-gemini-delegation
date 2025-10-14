@@ -1,294 +1,111 @@
 # Claude Code + Gemini CLI Delegation
 
-Automatically delegate cross-file, repository-wide, and shell tasks from Claude Code to Gemini CLI, optimizing token usage across both AI assistants.
+Automatically delegate high-token tasks from Claude Code to Gemini CLI, optimizing token usage across both AI assistants.
 
 **Problem:** Claude Pro caps at ~19K tokens/5h. Power users hit limits during repo-wide analysis, multi-file operations, or shell automation.
 
-**Solution:** Claude autonomously routes high-token tasks to Gemini CLI (1M tokens/day, 1000 req/day, free tier available).
+**Solution:** Claude autonomously routes these tasks to Gemini CLI (1M tokens/day free tier).
 
 ## Prerequisites
 
-- **Node.js**: Version 18 or higher - download it at [nodejs.org](https://nodejs.org/en/download)
+- **Node.js**: Version 18 or higher - [nodejs.org](https://nodejs.org/en/download)
 
 ## Quick Start
 
-1. **Install/update Gemini CLI to the latest version**
+1. **Install both CLIs**
 ```bash
-npm install -g @google/gemini-cli
+npm install -g @google/gemini-cli @anthropic-ai/claude-code
 ```
 
-2. **Install/update Claude Code to the latest version**
+2. **Copy configuration files**
+
+**Project-specific** (recommended for teams):
 ```bash
-npm install -g @anthropic-ai/claude-code
+cp -r .claude .gemini /path/to/your/project/
 ```
 
-3. **Choose your configuration scope:**
-
-**Option A: Project-specific (recommended for teams)**
+**User-wide** (applies to all projects):
 ```bash
-# Copy or merge to your project
-mkdir -p /path/to/project/.claude
-cp .claude/CLAUDE.md /path/to/project/.claude/
-```
-
-**Option B: User-wide (applies to all your projects)**
-```bash
-# Copy or merge to Claude Code user settings
 cp .claude/CLAUDE.md ~/.claude/
+cp -r .gemini ~/
 ```
 
-3. **Test delegation:**
+3. **Test delegation**
 ```bash
-cd /path/to/project && claude
+cd /path/to/your/project && claude
 # Ask: "Analyze the entire repository for performance issues"
-# Claude detects "entire repository" and delegates to Gemini CLI
+# Claude will delegate to Gemini CLI automatically
 ```
 
-## Delegation Rules
+## How It Works
 
-Claude delegates when:
+Claude delegates when tasks involve:
 
-1. **Cross-File Context:** Understanding or modifying code that spans multiple files
-2. **Repository-Wide Analysis:** Keywords like "analyze all files", "entire codebase", "scan repository"
-3. **Shell Operations:** Git commands, npm/package manager commands, build scripts
-4. **Internet Access:** Requests requiring real-time information, documentation lookups, or web searches
+1. **Multi-file operations** - Understanding or modifying code across multiple files
+2. **Repository-wide analysis** - Audits, scans, architecture reviews
+3. **Shell operations** - Git, npm, builds, any command execution
+4. **Internet access** - Documentation lookups, web searches
+
+**Command Format:**
+```bash
+export REFERRAL=claude && gemini "task" -m gemini-flash-latest -o json --allowed-tools=...
+```
 
 **Examples:**
-- `"Audit codebase for security"` → `gemini "Analyze @. for security" --allowed-tools=ReadFile,ReadFolder,SearchText -o json`
-- `"Run tests and analyze failures"` → `gemini "Run npm test and explain failures" -m gemini-flash-latest -y -o json`
-- `"Get git log from last 100 commits"` → `gemini "Show git log -100 --oneline" -m gemini-flash-latest -y -o json`
-- `"What are the latest features in Node.js 22?"` → `gemini "Find latest features in Node.js 22" -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch -o json`
+- "Audit codebase for security" → Uses `read_many_files,search_file_content,glob`
+- "Run tests and explain failures" → Uses `run_shell_command`
+- "What are the latest Node.js features?" → Uses `google_web_search,web_fetch`
 
 **Model Selection:**
-- **gemini-flash-latest** (faster, higher rate limits): File summaries, git operations, documentation lookups, procedural tasks
-- **gemini-2.5-pro** (default, more capable): Complex analysis, security audits, architecture reviews, deep reasoning
+- `gemini-flash-latest` - Fast, higher rate limits (git, npm, file summaries, searches)
+- `gemini-2.5-pro` - Deep analysis (security audits, architecture reviews, complex reasoning)
 
-**Customize:** Edit `.claude/CLAUDE.md` (16 lines) to adjust delegation rules and tool permissions. The provided version is intentionally minimal.
-
-## Architecture
-
-```text
-User Request
-    |
-    v
-Claude Code (analyzes task)
-    |
-    +-- Single-file, conceptual, code generation --> Claude handles directly
-    |
-    +-- Cross-file, repo-wide, or shell task --> Delegates via Bash
-                                                      |
-                                                      v
-                                                  Gemini CLI
-                                                  (executes with -y or --allowed-tools)
-                                                      |
-                                                      v
-                                                  Results (JSON)
-                                                      |
-                                                      v
-                                                  Claude synthesizes
+**Flow:**
 ```
-
-**Decision logic:**
-1. Cross-file context needed? → Gemini
-2. Keywords: "entire", "all files", "scan repository"? → Gemini
-3. Shell commands: git/npm/build? → Gemini (with `-y` and `-m gemini-flash-latest`)
-4. Internet/documentation lookup needed? → Gemini (with `--allowed-tools=GoogleSearch,WebFetch` and `-m gemini-flash-latest`)
-5. Otherwise: Claude handles directly
+User Request → Claude analyzes → Single-file/code gen? → Claude handles
+                               → Multi-file/shell/web? → Gemini executes → Claude synthesizes
+```
 
 ## Configuration
 
-### Core Delegation Rules
+Three files control behavior:
 
-Location: `<project-root>/.claude/CLAUDE.md`
+**`.claude/CLAUDE.md`** (32 lines) - Delegation rules for Claude Code
+- Defines when to delegate (multi-file, git, shell, web, audits)
+- Specifies tool permissions per task type
+- Model selection logic (Flash vs Pro)
 
-This file (16 lines, ultra-compact) tells Claude when to delegate to Gemini CLI. The actual implementation in this repo is minimal - see `.claude/CLAUDE.md`.
+**`.gemini/GEMINI.md`** (4 lines) - Brief security reminder for Gemini
+- Enforces JSON output in non-interactive mode
+- High-level allow/deny/confirm rules
 
-### Guardrail System
+**`.gemini/settings.json`** (71 lines) - Detailed guardrail configuration
+- Auto-executes safe commands (git status, npm install, read-only tools)
+- Auto-blocks destructive commands (rm -rf, git clean -fd, sudo)
+- Prompts for confirmation on risky operations (git reset --hard, npm uninstall)
 
-`.gemini/GEMINI.md` (4 lines) and `.gemini/settings.json` (71 lines) provide Gemini CLI security guardrails that apply when Claude Code invokes it:
+## Security Guardrails
 
-**ALLOWED (Auto-execute):**
-- Git: `status`, `add`, `commit`, `push` (non-force), `pull`, `fetch`, `log`, `diff`, `branch`, `checkout -b`, `merge`, `stash`, `show`
-- NPM: `install`, `ci`, `run build/test/dev/start`, `audit`, `update`, `list`, `outdated`
-- Filesystem: `mkdir`, `touch`, `cp`, `mv`, `ls`, `cat`, `grep`, `find`, `cd`, `pwd`, `tree`, `head`, `tail` (with safe path restrictions)
-- Read-only Tools: `ReadFile`, `ReadFolder`, `ReadManyFiles`, `FindFiles`, `SearchText`, `GoogleSearch`, `WebFetch`
+When Claude invokes Gemini (via `REFERRAL=claude`), guardrails automatically apply:
 
-**DENIED (Auto-block):**
-- Mass deletions (`rm -rf`, `rmdir /s`)
-- Repository deletion (`rm -rf .git`)
-- Destructive git commands (`git clean -fd`)
-- System-level changes (`sudo`, `mkfs`, `dd`, `chmod -R 777`, `chown -R`)
-- Destructive piped commands (`| rm`)
-- Direct file writes with the `WriteFile` tool
+| Action | Commands | Behavior |
+|--------|----------|----------|
+| **ALLOW** | git status/add/commit/push (non-force), npm install/test/build, read-only operations (ls, cat, grep, ReadFile, SearchText) | Auto-execute |
+| **DENY** | rm -rf, git clean -fd, sudo, chmod -R 777, destructive pipes | Auto-block with JSON error |
+| **CONFIRM** | git reset --hard, git push --force, npm uninstall, operations affecting >10 files | Prompt user |
 
-**REQUIRES CONFIRMATION:**
-- `git reset --hard`, `git revert`, `git push --force`
-- `npm uninstall`
-- `rm -r` (recursive delete)
-- Operations affecting >10 files (e.g., `git add`, `rm`)
+Guardrails only apply in non-interactive mode - users retain full control when running `gemini` directly.
 
-## Files in This Repository
-
-```text
-.
-├── README.md                      # This file
-├── .claude/
-│   ├── CLAUDE.md                 # Claude Code delegation rules (16 lines - ultra-compact)
-│   └── settings.local.json       # Optional local Claude settings override
-├── .gemini/
-│   ├── GEMINI.md                 # Gemini guardrail instructions (4 lines - minimal)
-│   └── settings.json             # Profile-based guardrail configuration (71 lines)
-├── .gitignore                    # Standard ignore patterns
-└── LICENSE                       # MIT License
-```
+**Customize:** Edit `.gemini/settings.json` to add custom allow/deny patterns for your workflow.
 
 ## Key Features
 
-- **Automatic Delegation:** Claude detects when to use Gemini based on configurable rules
-- **Conditional Guardrails:** Security restrictions apply only in non-interactive mode, preserving full control for users
-- **Secure Tool Usage:** Use `--allowed-tools` for read-only operations or `-y` for shell commands with guardrails
-- **Structured Output:** All Gemini responses return JSON for easy parsing
-- **Customizable Rules:** Edit `.claude/CLAUDE.md` (16 lines) and `.gemini/GEMINI.md` (4 lines) to adjust delegation and security behavior
-- **Model Optimization:** Intelligently routes simple tasks to gemini-flash-latest for speed and rate limit conservation
-- **Audit Logging:** Track all non-interactive operations for security review and debugging
-
-## Performance Impact
-
-**Token Savings Example** (from developing this repository):
-
-| Metric | Without Delegation | With Delegation | Savings |
-|--------|-------------------|-----------------|---------|
-| Claude tokens used | ~156K tokens | ~42K tokens | **73% reduction** |
-| Operations performed | 10 git ops, 3 web searches, repo analysis | Delegated to Gemini | Avoided rate limits |
-| Gemini tokens used | N/A | ~168K tokens | From separate 1M/day quota |
-
-**Time Efficiency:**
-- **Git operations:** gemini-flash-latest executes in 1-3 seconds vs Claude's 5-10 seconds (contextual overhead)
-- **Web searches:** Gemini has native GoogleSearch tool, faster than Claude's WebFetch
-- **Repository analysis:** Gemini can process entire codebases without Claude's context window constraints
-
-**Real-world benefits:**
-- Stay under Claude Pro's 44K tokens/5h limit even with complex workflows
-- Leverage Gemini's 1M tokens/day free tier for high-volume operations
-- Faster execution for procedural tasks (git, npm, searches)
-- Reserve Claude's context for high-value tasks: code generation, architecture decisions, complex reasoning
-
-## Guardrail Architecture
-
-### Design Philosophy
-
-The guardrail system is designed to:
-1. **Prevent accidental destruction** when Claude Code automates workflows
-2. **Preserve user autonomy** in interactive sessions
-3. **Maintain transparency** through audit logging
-4. **Allow customization** for different security requirements
-
-### How It Works
-
-```text
-Claude Code Request
-    |
-    v
-Set REFERRAL=claude
-    |
-    v
-Gemini CLI (detects non-interactive mode)
-    |
-    v
-Load non_interactive_profile from settings.json
-    |
-    v
-Evaluate command against:
-    1. DENY list --> Abort with JSON error
-    2. ALLOW list --> Execute safely
-    3. PROMPT list --> Request user confirmation
-    4. Default --> Request confirmation
-    |
-    v
-Return JSON response to Claude Code
-```
-
-### Example Workflow: Safe Git Push
-
-**User Request:** "Commit and push changes"
-
-**Claude Code Action:**
-```bash
-export REFERRAL=claude && gemini "Stage all changes, commit with message 'Update docs', and push to remote" -m gemini-flash-latest -y -o json
-```
-
-**Gemini Evaluation:**
-1. Detects `REFERRAL=claude` → Load guardrails
-2. Parses commands: `git add -A && git commit -m "Update docs" && git push`
-3. Checks each command:
-   - `git add -A` → ALLOW list → Execute
-   - `git commit` → ALLOW list → Execute
-   - `git push` → ALLOW list → Execute
-4. Logs to audit.log: `{"timestamp": "...", "command": "git push", "action": "allow", "executed": true}`
-5. Returns: `{"status": "success", "output": "...", "mode": "non_interactive"}`
-
-### Example Workflow: Blocked Destruction
-
-**User Request:** "Clean up the repository completely"
-
-**Claude Code Action:**
-```bash
-export REFERRAL=claude && gemini "Remove all untracked files and directories: git clean -fd" -y -o json
-```
-
-**Gemini Evaluation:**
-1. Detects `REFERRAL=claude` → Load guardrails
-2. Parses command: `git clean -fd`
-3. Matches DENY list pattern: `^git\\s+clean\\s+-fd`
-4. Returns: `{"status": "denied", "reason": "git clean -fd prohibited - use git status first", "mode": "non_interactive"}`
-5. Logs to audit.log: `{"timestamp": "...", "command": "git clean -fd", "action": "deny", "executed": false}`
-
-**Claude Code Response:** "The command 'git clean -fd' was denied by guardrails. This destructive operation is not allowed in automated mode. Please run 'gemini' interactively to perform this action with manual confirmation."
-
-### Customization
-
-Edit `.gemini/settings.json` (project-level) or `~/.gemini/settings.json` (user-level) to customize guardrails:
-
-**Add custom allow pattern:**
-```json
-{
-  "profiles": {
-    "non_interactive_profile": {
-      "command_rules": {
-        "allow_list": [
-          {
-            "category": "custom_scripts",
-            "patterns": [
-              "^./scripts/deploy\\.sh",
-              "^npm run deploy"
-            ],
-            "description": "Allow custom deployment scripts"
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
-**Add custom deny pattern:**
-```json
-{
-  "profiles": {
-    "non_interactive_profile": {
-      "command_rules": {
-        "deny_list": [
-          {
-            "pattern": "^docker\\s+system\\s+prune\\s+-a",
-            "description": "Block docker system prune in automation",
-            "message": "Docker system prune requires manual review"
-          }
-        ]
-      }
-    }
-  }
-}
-```
+- Automatic delegation based on task analysis
+- 73% token reduction for complex workflows (measured during this repo's development)
+- Security guardrails prevent accidental destruction in automation
+- Structured JSON responses for easy parsing
+- Model optimization (Flash for speed, Pro for depth)
+- Fully customizable rules and tool permissions
 
 ## License
 
@@ -301,4 +118,4 @@ MIT License - See [LICENSE](LICENSE) file
 
 ---
 
-**Last Updated:** October 13, 2025
+**Last Updated:** October 14, 2025
