@@ -16,14 +16,13 @@ Web: --allowed-tools=google_web_search,web_fetch
 Audits: --allowed-tools=read_many_files,search_file_content,glob
 </GEMINI_TASK_TOOLS>
 <GEMINI_SYNTAX>
-Default: gemini "task" -m gemini-flash-latest -o json [tools]
-Deep analysis: gemini "security audits|accessibility reviews|codebase scans|architecture reviews" -o json [tools]
-(omit -m flag, default for complex audits)
-export REFERRAL=claude
+Standard: export REFERRAL=claude && gemini "task" -m gemini-flash-latest -o json [tools]
+Deep analysis only: -m gemini-2.5-pro (for audits, architecture reviews, multi-component security)
+- If Pro quota fails: Continue with -m gemini-flash-latest
 </GEMINI_SYNTAX>
 <WORKFLOW>
 1. Display ROLE
-2. <thinking>Task type, simple (Flash) vs complex (default) decision</thinking>
-3. Delegate with appropriate model OR execute
+2. <thinking>Categorize: CLAUDE task OR GEMINI (Flash vs Pro)</thinking>
+3. Execute
 </WORKFLOW>
 </MANDATE>
