@@ -20,13 +20,13 @@ Type: [CLAUDE_TASK | GEMINI_TASK]
 If GEMINI_TASK:
   - Tools needed: [list]
   - Model: [flash-latest | 2.5-pro]
-  - Command: export REFERRAL=claude && gemini "[task]" -m [model] -o json --allowed-tools=[tools]
+  - Command: export REFERRAL=claude && gemini "[task]" -m [model] -o json
 </thinking>
 Then execute the command OR proceed with Claude work.
 </WORKFLOW>
 <GEMINI_SYNTAX>
 Standard: -m gemini-flash-latest --allowed-tools=[FindFiles,GoogleSearch,ReadFile,ReadFolder,ReadManyFiles,SearchText,WebFetch]
-Shell access: -y
-Deep: -m gemini-2.5-pro (audits, architecture, security)
+Shell access ONLY: -m gemini-flash-latest -y (do NOT combine with --allowed-tools)
+Deep (audits, architecture, security): -m gemini-2.5-pro --allowed-tools=[FindFiles,GoogleSearch,ReadFile,ReadFolder,ReadManyFiles,SearchText,WebFetch]
 </GEMINI_SYNTAX>
 </MANDATE>
