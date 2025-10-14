@@ -79,7 +79,7 @@ Three files control behavior:
 - Enforces JSON output in non-interactive mode
 - High-level allow/deny/confirm rules
 
-**`.gemini/settings.json`** (71 lines) - Detailed guardrail configuration
+**`.gemini/settings.json`** (74 lines) - Detailed guardrail configuration
 - Auto-executes safe commands (git status, npm install, read-only tools)
 - Auto-blocks destructive commands (rm -rf, git clean -fd, sudo)
 - Prompts for confirmation on risky operations (git reset --hard, npm uninstall)
@@ -91,7 +91,7 @@ When Claude invokes Gemini (via `REFERRAL=claude`), guardrails automatically app
 | Action | Commands | Behavior |
 |--------|----------|----------|
 | **ALLOW** | git status/add/commit/push (non-force), npm install/test/build, read-only operations (ls, cat, grep, ReadFile, SearchText) | Auto-execute |
-| **DENY** | rm -rf, git clean -fd, sudo, chmod -R 777, destructive pipes | Auto-block with JSON error |
+| **DENY** | rm -rf, del /s, PowerShell Remove-Item -Recurse, git clean -fd, sudo, chmod -R 777, destructive pipes, .env/.ssh/credentials access | Auto-block with JSON error |
 | **CONFIRM** | git reset --hard, git push --force, npm uninstall, operations affecting >10 files | Prompt user |
 
 Guardrails only apply in non-interactive mode - users retain full control when running `gemini` directly.

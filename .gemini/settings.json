@@ -17,6 +17,8 @@
           { "pattern": "^rm\\s+-rf\\s+[*./]" },
           { "pattern": "^rm\\s+-rf\\s+\\.git" },
           { "pattern": "^rmdir\\s+/[sq]" },
+          { "pattern": "^del\\s+/[sq]" },
+          { "pattern": "^powershell.*Remove-Item.*-Recurse" },
           { "pattern": "^git\\s+clean\\s+-fd" },
           { "pattern": "^sudo\\s+" },
           { "pattern": "\\|\\s*rm" },
@@ -24,14 +26,17 @@
           { "pattern": "^mkfs" },
           { "pattern": "^dd\\s+if=/dev/zero" },
           { "pattern": "^chmod\\s+-R\\s+777" },
-          { "pattern": "^chown\\s+-R" }
+          { "pattern": "^chown\\s+-R" },
+          { "pattern": ".*\\.env$" },
+          { "pattern": ".*\\.ssh/" },
+          { "pattern": ".*credential" }
         ],
         "allow_list": [
           { "category": "git_safe", "patterns": ["^git\\s+(status|add|commit|push(?!\\s+--force)|pull|fetch|log|diff|branch|checkout\\s+-b|merge|stash|show)"] },
           { "category": "npm_safe", "patterns": ["^npm\\s+(install|ci|run\\s+(build|test|dev|start)|audit|update|list|outdated)"] },
           { "category": "yarn_safe", "patterns": ["^yarn\\s+(install|build|test|dev|start)"] },
           { "category": "filesystem_safe", "patterns": ["^mkdir\\s+(?!.*[/\\\\](?:root|system|windows|program))", "^touch\\s+", "^cp\\s+(?!.*\\s+-[rf])", "^mv\\s+", "^ls\\s+", "^cat\\s+", "^grep\\s+", "^find\\s+", "^cd\\s+", "^pwd", "^tree\\s+", "^head\\s+", "^tail\\s+"] },
-          { "category": "read_only_tools", "patterns": ["ReadFile", "ReadFolder", "ReadManyFiles", "FindFiles", "SearchText", "GoogleSearch", "WebFetch"] }
+          { "category": "read_only_tools", "patterns": ["read_file", "list_directory", "glob", "search_file_content", "read_many_files", "google_web_search", "web_fetch"] }
         ],
         "prompt_list": [
           { "pattern": "^git\\s+reset\\s+--hard" },
