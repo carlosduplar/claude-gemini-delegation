@@ -98,6 +98,25 @@ Guardrails only apply in non-interactive mode - users retain full control when r
 
 **Customize:** Edit `.gemini/settings.json` to add custom allow/deny patterns for your workflow.
 
+**Windows Note:** The documented Gemini shell tools (Shell, run_shell_command) does NOT work on Windows. For shell operations on Windows, use the `-y` flag instead of `--allowed-tools` to enable unrestricted shell access:
+```bash
+export REFERRAL=claude && gemini "task" -m gemini-flash-latest -y -o json
+```
+
+## Maintaining Instruction Adherence
+
+Claude Code may (and will) occasionally deviate from CLAUDE.md instructions, especially in long conversations with large context. Best practices:
+
+1. **Clear context regularly** - Use `/clear` command to reset conversation state
+2. **Compress context** - Use `/condense` to summarize and reduce token usage
+3. **Strengthen mandates** - Mark critical rules with `status="IMMUTABLE"` or `status="MANDATORY"`
+4. **Be explicit** - Use phrases like "MUST DELEGATE" rather than "should delegate"
+5. **Add consequences** - Include phrases like "ANY VIOLATION CONSTITUTES ROLE ABANDONMENT"
+6. **Structured format** - Use XML-style tags (`<ROLE>`, `<WORKFLOW>`) for clear parsing
+7. **Start fresh** - If Claude ignores rules repeatedly, clear context and restart
+
+The CLAUDE.md file in this repo demonstrates these techniques.
+
 ## Key Features
 
 - Automatic delegation based on task analysis
