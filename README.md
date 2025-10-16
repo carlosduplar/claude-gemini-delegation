@@ -9,7 +9,7 @@ Automatically delegate high-token tasks from Claude Code to Gemini CLI, optimizi
 ## Key Features
 
 - Automatic delegation based on task analysis
-- ~60-70% Claude Code token reduction for complex workflows
+- 10 to 60% Claude Code token reduction, depending on workflow complexity
 - Security guardrails prevent accidental destruction in automation
 - Structured JSON responses for easy parsing
 - Model optimization in Gemini (Flash for speed, Pro for depth) avoiding rate limits as well
