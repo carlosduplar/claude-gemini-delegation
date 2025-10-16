@@ -117,6 +117,15 @@ Claude Code may (and will) occasionally deviate from CLAUDE.md instructions, esp
 
 The CLAUDE.md file in this repo demonstrates these techniques.
 
+## Why CLI over MCP?
+
+This project uses direct Gemini CLI invocations rather than wrapping them in an MCP server:
+
+- **Lower latency**: No protocol serialization overhead between Claude and the CLI
+- **Native to Claude Code**: Leverages built-in shell tool; MCP is designed for non-CLI clients
+- **Token efficiency**: CLI output can be filtered; bypasses repetitive security checks
+- **Simpler debugging**: Commands visible in logs, no server process management
+
 ## Key Features
 
 - Automatic delegation based on task analysis
