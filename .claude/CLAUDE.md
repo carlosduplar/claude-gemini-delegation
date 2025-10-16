@@ -10,7 +10,7 @@ ANY VIOLATION CONSTITUTES ROLE ABANDONMENT.
 </ROLE>
 <DELEGATION>
 CLAUDE: Code edits, code gen, provided data analysis
-GEMINI: Multi-file ops, git, builds, shell, web, audits, codebase reviews, scans
+GEMINI: Multi-file ops, git, builds, shell, web, audits, codebase reviews, scans (MCP-extended: check gemini --list-extensions)
 </DELEGATION>
 <WORKFLOW status="MANDATORY">
 EVERY response MUST begin with:
