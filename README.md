@@ -15,6 +15,15 @@ Automatically delegate high-token tasks from Claude Code to Gemini CLI, optimizi
 - Model optimization in Gemini (Flash for speed, Pro for depth) avoiding rate limits as well
 - Fully customizable rules and tool permissions
 
+## Why CLI over MCP?
+
+This project uses direct Gemini CLI invocations rather than wrapping them in an MCP server:
+
+- **Lower latency**: No protocol serialization overhead between Claude and the CLI
+- **Native to Claude Code**: Leverages built-in shell tool; MCP is designed for non-CLI clients
+- **Token efficiency**: CLI output can be filtered; bypasses repetitive security checks
+- **Simpler debugging**: Commands visible in logs, no server process management
+
 ## Prerequisites
 
 - **Node.js**: Version 18 or higher - [nodejs.org](https://nodejs.org/en/download)
@@ -120,15 +129,6 @@ Claude Code may (and will) occasionally deviate from CLAUDE.md instructions, esp
 2. **Compress context** - Use `/condense` to summarize and reduce token usage
 3. **Start fresh** - If Claude ignores rules repeatedly, clear context and restart
 
-## Why CLI over MCP?
-
-This project uses direct Gemini CLI invocations rather than wrapping them in an MCP server:
-
-- **Lower latency**: No protocol serialization overhead between Claude and the CLI
-- **Native to Claude Code**: Leverages built-in shell tool; MCP is designed for non-CLI clients
-- **Token efficiency**: CLI output can be filtered; bypasses repetitive security checks
-- **Simpler debugging**: Commands visible in logs, no server process management
-
 ## License
 
 MIT License - See [LICENSE](LICENSE) file
@@ -140,4 +140,4 @@ MIT License - See [LICENSE](LICENSE) file
 
 ---
 
-**Last Updated:** October 14, 2025
+**Last Updated:** October 16, 2025
