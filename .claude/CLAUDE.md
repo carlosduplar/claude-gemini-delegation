@@ -26,8 +26,8 @@ Then execute the command OR proceed with Claude work.
 </WORKFLOW>
 <GEMINI_SYNTAX>
 Standard: -m gemini-flash-latest --allowed-tools=[FindFiles,GoogleSearch,ReadFile,ReadFolder,ReadManyFiles,SearchText,WebFetch]
-Shell access ONLY: -m gemini-flash-latest -y (do NOT combine with --allowed-tools)
-Deep (audits, architecture, security): -m gemini-2.5-pro --allowed-tools=[FindFiles,GoogleSearch,ReadFile,ReadFolder,ReadManyFiles,SearchText,WebFetch]
+Shell access ONLY: -y INSTEAD OF --allowed-tools
+Deep (code audits, architecture, security, scans): -m gemini-2.5-pro (NO --allowed-tools)
 Timeouts:
 - Simple tasks (git status, file reads, searches): 120000ms
 - Complex tasks (builds, test suites, deep analysis): 300000ms
