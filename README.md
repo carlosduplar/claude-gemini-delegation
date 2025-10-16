@@ -121,6 +121,22 @@ Guardrails only apply in non-interactive mode - users retain full control when r
 export REFERRAL=claude && gemini "task" -m gemini-flash-latest -y -o json
 ```
 
+## Demo
+
+Here's the delegation system in action:
+
+### 1. Claude Recognizes Delegation Need
+![Claude delegates to Gemini](docs/images/delegation-decision.png)
+
+### 2. Gemini Performs Analysis
+![Gemini analysis results](docs/images/gemini-analysis.png)
+
+### 3. Collaborative Implementation
+![Implementation workflow](docs/images/deployment-complete.png)
+
+### 4. Token Efficiency Results
+![Token usage comparison](docs/images/token-metrics.png)
+
 ## Maintaining Instruction Adherence
 
 Claude Code may (and will) occasionally deviate from CLAUDE.md instructions, especially in long conversations with large context. Best practices:
