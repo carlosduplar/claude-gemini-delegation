@@ -4,7 +4,16 @@ Automatically delegate high-token tasks from Claude Code to Gemini CLI, optimizi
 
 **Problem:** Claude Pro caps at ~19K tokens/5h. Power users hit limits during repo-wide analysis, multi-file operations, or shell automation.
 
-**Solution:** Claude autonomously routes these tasks to Gemini CLI (1M tokens/day free tier).
+**Solution:** Claude Code autonomously routes these tasks to Gemini CLI (1M tokens/day free tier).
+
+## Key Features
+
+- Automatic delegation based on task analysis
+- ~60-70% Claude Code token reduction for complex workflows
+- Security guardrails prevent accidental destruction in automation
+- Structured JSON responses for easy parsing
+- Model optimization in Gemini (Flash for speed, Pro for depth) avoiding rate limits as well
+- Fully customizable rules and tool permissions
 
 ## Prerequisites
 
@@ -12,7 +21,7 @@ Automatically delegate high-token tasks from Claude Code to Gemini CLI, optimizi
 
 ## Quick Start
 
-1. **Install both CLIs**
+1. **Install/update both CLIs**
 ```bash
 npm install -g @google/gemini-cli @anthropic-ai/claude-code
 ```
@@ -70,16 +79,16 @@ User Request → Claude analyzes → Single-file/code gen? → Claude handles
 
 Three files control behavior:
 
-**`.claude/CLAUDE.md`** (32 lines) - Delegation rules for Claude Code
+**`.claude/CLAUDE.md`** - Delegation rules for Claude Code
 - Defines when to delegate (multi-file, git, shell, web, audits)
 - Specifies tool permissions per task type
 - Model selection logic (Flash vs Pro)
 
-**`.gemini/GEMINI.md`** (4 lines) - Brief security reminder for Gemini
+**`.gemini/GEMINI.md`** - Brief security reminder for Gemini
 - Enforces JSON output in non-interactive mode
 - High-level allow/deny/confirm rules
 
-**`.gemini/settings.json`** (74 lines) - Detailed guardrail configuration
+**`.gemini/settings.json`** - Detailed guardrail configuration
 - Auto-executes safe commands (git status, npm install, read-only tools)
 - Auto-blocks destructive commands (rm -rf, git clean -fd, sudo)
 - Prompts for confirmation on risky operations (git reset --hard, npm uninstall)
@@ -109,13 +118,7 @@ Claude Code may (and will) occasionally deviate from CLAUDE.md instructions, esp
 
 1. **Clear context regularly** - Use `/clear` command to reset conversation state
 2. **Compress context** - Use `/condense` to summarize and reduce token usage
-3. **Strengthen mandates** - Mark critical rules with `status="IMMUTABLE"` or `status="MANDATORY"`
-4. **Be explicit** - Use phrases like "MUST DELEGATE" rather than "should delegate"
-5. **Add consequences** - Include phrases like "ANY VIOLATION CONSTITUTES ROLE ABANDONMENT"
-6. **Structured format** - Use XML-style tags (`<ROLE>`, `<WORKFLOW>`) for clear parsing
-7. **Start fresh** - If Claude ignores rules repeatedly, clear context and restart
-
-The CLAUDE.md file in this repo demonstrates these techniques.
+3. **Start fresh** - If Claude ignores rules repeatedly, clear context and restart
 
 ## Why CLI over MCP?
 
@@ -125,15 +128,6 @@ This project uses direct Gemini CLI invocations rather than wrapping them in an 
 - **Native to Claude Code**: Leverages built-in shell tool; MCP is designed for non-CLI clients
 - **Token efficiency**: CLI output can be filtered; bypasses repetitive security checks
 - **Simpler debugging**: Commands visible in logs, no server process management
-
-## Key Features
-
-- Automatic delegation based on task analysis
-- 73% token reduction for complex workflows (measured during this repo's development)
-- Security guardrails prevent accidental destruction in automation
-- Structured JSON responses for easy parsing
-- Model optimization (Flash for speed, Pro for depth)
-- Fully customizable rules and tool permissions
 
 ## License
 
