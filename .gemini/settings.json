@@ -66,9 +66,7 @@
     "mode": "auto",
     "detection_logic": {
       "rules": [
-        { "condition": "process.env.REFERRAL === 'claude'", "profile": "non_interactive_profile" },
-        { "condition": "!process.stdin.isTTY", "profile": "non_interactive_profile" },
-        { "condition": "args.includes('-p') || args.includes('--headless')", "profile": "non_interactive_profile" },
+        { "condition": "process.env.REFERRAL === 'claude' || !process.stdin.isTTY || args.includes('-p')", "profile": "non_interactive_profile" },
         { "condition": "default", "profile": "default_profile" }
       ]
     }

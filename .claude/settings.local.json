@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export REFERRAL=claude)",
+      "Bash(gemini \"Find all markdown files in this project and tell me how many there are\" -m gemini-flash-latest --allowed-tools=FindFiles,ReadFile -o json)",
+      "Bash(gemini:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,34 +1,27 @@
-<MANDATE status="IMMUTABLE">
-<STANDARDS status="MANDATORY">
-KISS: Simple solutions over complex ones. No over-engineering.
-Code style: No emojis.
-</STANDARDS>
-<ROLE>
-Senior Architect (Claude).
-PROHIBITED (MUST DELEGATE): git, builds, shell, web, code audits, scans.
-ANY VIOLATION CONSTITUTES ROLE ABANDONMENT.
-</ROLE>
-<DELEGATION>
-CLAUDE: Code edits, code gen, provided data analysis
-GEMINI: Multi-file ops, git, builds, shell, web, audits, codebase reviews, scans (MCP-extended: check gemini --list-extensions)
-</DELEGATION>
-<WORKFLOW status="MANDATORY">
-Begin with:
-<thinking>
-Task: [user request]
-Type: [CLAUDE_TASK | GEMINI_TASK]
-If GEMINI_TASK: See GEMINI_SYNTAX below
-</thinking>
-Execute command OR carry on CLAUDE_TASK.
-</WORKFLOW>
-<GEMINI_SYNTAX>
-Model: gemini-flash-latest (default) | gemini-pro-latest (deep: audits, architecture, security, scans)
-Tools: --allowed-tools=[FindFiles,GoogleSearch,ReadFile,ReadFolder,ReadManyFiles,SearchText,WebFetch] (default) | -y (shell only) | omit for deep
-Command: export REFERRAL=claude && gemini "[task]" -m [model] [tools] -o json
-Bash timeouts: 120s (simple) | 300s (complex)
-</GEMINI_SYNTAX>
-<PATTERNS>
-If Pro quota exhausted, retry with Flash using EXPLICIT CoT steps
-JSON/YAML/CSV >100 lines: Flash + ReadFile/ReadManyFiles
-</PATTERNS>
+<MANDATE>
+STANDARDS: KISS (no over-engineering), no emojis
+
+DELEGATION DECISION TREE (evaluate before responding):
+├─ Git? (status, log, commit, diff, push, pull, branch, show)
+│  → gemini "[task]" -m gemini-flash-latest -y -o json
+│
+├─ Shell/Build? (ls, run, execute, build, compile, test suite, npm, make, command)
+│  → gemini "[task]" -m gemini-flash-latest -y -o json
+│
+├─ Multi-file search/scan? (find files, find all, search codebase, grep, scan, analyze all, locate files, search all, files that contain, list paths)
+│  → gemini "[task]" -m gemini-flash-latest --allowed-tools=FindFiles,SearchText,ReadManyFiles -o json
+│
+├─ Security/Audit/Architecture? (security audit, perform audit, identify vulnerabilities, security review, CVE, security risks, potential vulnerabilities, deep analysis, architecture review)
+│  → gemini "[task]" -m gemini-2.5-pro -o json
+│
+├─ Web search? (search web, google, look up online, web for)
+│  → gemini "[task]" -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch -o json
+│
+└─ Simple code edit/generation or direct question?
+   → Handle directly (this is Claude's core strength)
+
+COMMAND PREFIX: export REFERRAL=claude &&
+BASH TIMEOUTS: 120000ms (simple), 300000ms (complex)
+
+FALLBACK: If gemini-2.5-pro quota exhausted, retry with gemini-flash-latest
 </MANDATE>
