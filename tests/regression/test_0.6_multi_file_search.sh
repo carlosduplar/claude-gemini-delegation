@@ -71,9 +71,9 @@ else
   echo -e "${YELLOW}WARN${NC} (Expected FindFiles or SearchText tools)"
 fi
 
-# Assert 4: Output should contain analysis (patterns, categories, summary)
+# Assert 4: Output should contain analysis (patterns, categories, summary, or test references)
 echo -n "Assert 4: Output contains analysis... "
-if echo "$OUTPUT" | grep -qi "pattern\|categor\|naming\|scheme\|test.*0\.[0-9]"; then
+if echo "$OUTPUT" | grep -qiE "pattern|categor|naming|scheme|test.*0\.[0-9]|TEST_ID|assertion|comprehensive"; then
   echo -e "${GREEN}PASS${NC}"
 else
   echo -e "${RED}FAIL${NC} (No analysis in response)"

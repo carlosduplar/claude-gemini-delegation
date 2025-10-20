@@ -4,7 +4,7 @@
 # Validates that Claude Code correctly handles tasks with both delegatable and non-delegatable parts
 # Expected: Delegate git part, handle code generation directly
 
-TEST_ID="0.10"
+TEST_ID="0.4"
 TEST_NAME="Mixed Task (Partial Delegation)"
 TEST_CATEGORY="Claude Delegation Logic - Edge Case"
 

@@ -4,7 +4,7 @@
 # Validates that Claude Code DOES NOT delegate pure code generation tasks
 # This is a negative test - delegation should NOT occur
 
-TEST_ID="0.8"
+TEST_ID="0.7"
 TEST_NAME="Code Generation (No Delegation Expected)"
 TEST_CATEGORY="Claude Delegation Logic - Negative Test"
 
