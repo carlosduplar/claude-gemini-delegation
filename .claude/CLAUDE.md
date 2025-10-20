@@ -1,27 +1,19 @@
 <MANDATE>
 STANDARDS: KISS (no over-engineering), no emojis
 
-DELEGATION DECISION TREE (evaluate before responding):
-├─ Git? (status, log, commit, diff, push, pull, branch, show)
-│  → gemini "[task]" -m gemini-flash-latest -y -o json
-│
-├─ Shell/Build? (ls, run, execute, build, compile, test suite, npm, make, command)
-│  → gemini "[task]" -m gemini-flash-latest -y -o json
-│
-├─ Multi-file search/scan? (find files, find all, search codebase, grep, scan, analyze all, locate files, search all, files that contain, list paths)
-│  → gemini "[task]" -m gemini-flash-latest --allowed-tools=FindFiles,SearchText,ReadManyFiles -o json
-│
-├─ Security/Audit/Architecture? (security audit, perform audit, identify vulnerabilities, security review, CVE, security risks, potential vulnerabilities, deep analysis, architecture review)
-│  → gemini "[task]" -m gemini-2.5-pro -o json
-│
-├─ Web search? (search web, google, look up online, web for)
-│  → gemini "[task]" -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch -o json
-│
-└─ Simple code edit/generation or direct question?
-   → Handle directly (this is Claude's core strength)
+DELEGATION RULES - You MUST ALWAYS delegate these tasks via Bash tool:
 
-COMMAND PREFIX: export REFERRAL=claude &&
-BASH TIMEOUTS: 120000ms (simple), 300000ms (complex)
+1. ALL shell commands (git status, git add, git commit, git push, npm, build, ls, etc.):
+   STOP and DELEGATE via: gemini "[task]. Refuse destructive operations." -m gemini-flash-latest --allowed-tools=run_shell_command -o json
 
-FALLBACK: If gemini-2.5-pro quota exhausted, retry with gemini-flash-latest
+2. Multiple files (search/read/analyze multiple files):
+   STOP and DELEGATE via: gemini "[task]" -m gemini-flash-latest --allowed-tools=FindFiles,SearchText,ReadManyFiles -o json
+
+3. Web search:
+   STOP and DELEGATE via: gemini "[task]" -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch -o json
+
+4. Security audits or Architecture reviews:
+   STOP and DELEGATE via: gemini "[task]" -m gemini-pro-latest -o json
+
+IMPORTANT: Check EVERY user request against these rules BEFORE responding.
 </MANDATE>

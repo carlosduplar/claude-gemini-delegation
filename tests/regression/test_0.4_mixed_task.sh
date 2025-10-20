@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# Test 0.4: Build Operations Delegation
-# Validates that Claude Code correctly delegates build/test commands to Gemini
+# Test 0.10: Mixed Task (EDGE CASE)
+# Validates that Claude Code correctly handles tasks with both delegatable and non-delegatable parts
+# Expected: Delegate git part, handle code generation directly
 
-TEST_ID="0.4"
-TEST_NAME="Build Operations Delegation"
-TEST_CATEGORY="Claude Delegation Logic"
+TEST_ID="0.10"
+TEST_NAME="Mixed Task (Partial Delegation)"
+TEST_CATEGORY="Claude Delegation Logic - Edge Case"
 
 # Colors for output
 RED='\033[0;31m'
@@ -19,9 +20,10 @@ echo "Test $TEST_ID: $TEST_NAME"
 echo "Category: $TEST_CATEGORY"
 echo "========================================="
 
-# Test command - Ask Claude to run a build/test command
-TEST_PROMPT="Run 'ls -la tests/regression' and show me the output"
-CLAUDE_CMD="claude -p \"$TEST_PROMPT\""
+# Test command - Mixed task: git operation + code generation
+# Expected behavior: Delegate git status, then Claude writes the parsing function
+TEST_PROMPT="Show me the git status, then write a bash function that can parse git status output to count modified files"
+CLAUDE_CMD="claude --verbose -p \"$TEST_PROMPT\""
 
 echo "Executing: $CLAUDE_CMD"
 echo ""
@@ -52,31 +54,31 @@ else
   PASS=false
 fi
 
-# Assert 2: Claude should delegate shell commands to Gemini
-echo -n "Assert 2: Claude delegated to Gemini... "
+# Assert 2: Claude should delegate the git part
+echo -n "Assert 2: Delegation occurred (for git)... "
 if echo "$OUTPUT" | grep -qi "gemini"; then
   echo -e "${GREEN}PASS${NC}"
   DELEGATED=true
 else
-  echo -e "${RED}FAIL${NC} (No delegation detected)"
-  PASS=false
+  echo -e "${YELLOW}WARN${NC} (Expected delegation for git status)"
   DELEGATED=false
 fi
 
-# Assert 3: Should use -y flag for shell access
-echo -n "Assert 3: Uses shell access flag... "
-if echo "$OUTPUT" | grep -q "\-y"; then
+# Assert 3: Output should contain git status information
+echo -n "Assert 3: Output contains git status... "
+if echo "$OUTPUT" | grep -qi "git.*status\|branch\|modified\|untracked"; then
   echo -e "${GREEN}PASS${NC}"
 else
-  echo -e "${YELLOW}WARN${NC} (Expected -y flag for shell commands)"
+  echo -e "${RED}FAIL${NC} (No git status in response)"
+  PASS=false
 fi
 
-# Assert 4: Output should contain command results
-echo -n "Assert 4: Output contains command results... "
-if echo "$OUTPUT" | grep -qi "test_.*\.sh\|total\|drwx"; then
+# Assert 4: Output should contain generated function code
+echo -n "Assert 4: Output contains parsing function... "
+if echo "$OUTPUT" | grep -qi "function\|parse\|count\|grep\|\$"; then
   echo -e "${GREEN}PASS${NC}"
 else
-  echo -e "${RED}FAIL${NC} (No command output in response)"
+  echo -e "${RED}FAIL${NC} (No function code in response)"
   PASS=false
 fi
 

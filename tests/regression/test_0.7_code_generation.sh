@@ -23,7 +23,7 @@ echo "========================================="
 # Test command - Ask Claude to generate code
 # This is Claude's core strength and should NOT be delegated
 TEST_PROMPT="Write a bash function called 'calculate_sum' that takes two numbers as arguments and returns their sum"
-CLAUDE_CMD="claude -p \"$TEST_PROMPT\""
+CLAUDE_CMD="claude --verbose -p \"$TEST_PROMPT\""
 
 echo "Executing: $CLAUDE_CMD"
 echo ""

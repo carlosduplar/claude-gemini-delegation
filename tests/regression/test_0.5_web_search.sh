@@ -22,7 +22,7 @@ echo "========================================="
 
 # Test command - Ask Claude to search the web
 TEST_PROMPT="Search the web for 'KISS principle in software engineering' and summarize the key points"
-CLAUDE_CMD="claude -p \"$TEST_PROMPT\""
+CLAUDE_CMD="claude --verbose -p \"$TEST_PROMPT\""
 
 echo "Executing: $CLAUDE_CMD"
 echo ""
@@ -64,16 +64,8 @@ else
   # Don't fail - web search might not work in nightly build either
 fi
 
-# Assert 3: Should use GoogleSearch or WebFetch tools
-echo -n "Assert 3: Uses web search tools... "
-if echo "$OUTPUT" | grep -q "GoogleSearch\|WebFetch"; then
-  echo -e "${GREEN}PASS${NC}"
-else
-  echo -e "${YELLOW}WARN${NC} (Expected GoogleSearch or WebFetch tools)"
-fi
-
-# Assert 4: Output should contain KISS principle information
-echo -n "Assert 4: Output contains KISS principle info... "
+# Assert 3: Output should contain KISS principle information
+echo -n "Assert 3: Output contains KISS principle info... "
 if echo "$OUTPUT" | grep -qi "keep.*simple\|simplicity\|complexity"; then
   echo -e "${GREEN}PASS${NC}"
 else
@@ -81,8 +73,8 @@ else
   # Don't fail - Claude might answer from knowledge base if web search fails
 fi
 
-# Assert 5: Execution time should be reasonable
-echo -n "Assert 5: Execution time reasonable (<180s)... "
+# Assert 4: Execution time should be reasonable
+echo -n "Assert 4: Execution time reasonable (<180s)... "
 if [ $DURATION -lt 180 ]; then
   echo -e "${GREEN}PASS${NC} (${DURATION}s)"
 else

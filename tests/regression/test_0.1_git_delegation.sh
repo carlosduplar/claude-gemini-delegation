@@ -21,7 +21,7 @@ echo "========================================="
 
 # Test command - Ask Claude to perform git operations
 TEST_PROMPT="Show me the git status and recent commits"
-CLAUDE_CMD="claude -p \"$TEST_PROMPT\""
+CLAUDE_CMD="claude --verbose -p \"$TEST_PROMPT\""
 
 echo "Executing: $CLAUDE_CMD"
 echo ""
@@ -63,16 +63,8 @@ else
   DELEGATED=false
 fi
 
-# Assert 3: Output should contain delegation command pattern
-echo -n "Assert 3: Delegation command pattern found... "
-if echo "$OUTPUT" | grep -q "export REFERRAL=claude"; then
-  echo -e "${GREEN}PASS${NC}"
-else
-  echo -e "${YELLOW}WARN${NC} (Expected delegation pattern not found)"
-fi
-
-# Assert 4: Output should contain git information (from Gemini's response)
-echo -n "Assert 4: Output contains git information... "
+# # Assert 3: Output should contain git information (from Gemini's response)
+echo -n "Assert 3: Output contains git information... "
 if echo "$OUTPUT" | grep -qi "git\|branch\|commit\|status"; then
   echo -e "${GREEN}PASS${NC}"
 else
@@ -80,8 +72,8 @@ else
   PASS=false
 fi
 
-# Assert 5: Execution time should be reasonable
-echo -n "Assert 5: Execution time reasonable (<120s)... "
+# Assert 4: Execution time should be reasonable
+echo -n "Assert 4: Execution time reasonable (<120s)... "
 if [ $DURATION -lt 120 ]; then
   echo -e "${GREEN}PASS${NC} (${DURATION}s)"
 else

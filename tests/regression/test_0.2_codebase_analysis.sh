@@ -21,7 +21,7 @@ echo "========================================="
 
 # Test command - Ask Claude to analyze multiple files
 TEST_PROMPT="Analyze all shell scripts in tests/regression/ and summarize their purpose"
-CLAUDE_CMD="claude -p \"$TEST_PROMPT\""
+CLAUDE_CMD="claude --verbose -p \"$TEST_PROMPT\""
 
 echo "Executing: $CLAUDE_CMD"
 echo ""

@@ -20,7 +20,7 @@ echo "Category: $TEST_CATEGORY"
 echo "========================================="
 
 # Test command - Ask Claude to search across multiple files and analyze patterns
-TEST_PROMPT="Search all test files for TEST_ID declarations and analyze the naming patterns used across different test categories. Summarize the categorization scheme."
+TEST_PROMPT="Search all test files for TEST_ID declarations, read the full content of each file, analyze the testing patterns, categorization schemes, and assertion strategies used. Provide a comprehensive report comparing approaches across all test categories."
 CLAUDE_CMD="claude --verbose -p \"$TEST_PROMPT\""
 
 echo "Executing: $CLAUDE_CMD"
