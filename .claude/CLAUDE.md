@@ -14,8 +14,7 @@ DELEGATION RULES - you MUST ALWAYS STOP and DELEGATE these tasks via Bash tool:
 
 4. Security audits or Architecture reviews:
    gemini "[task]" -m gemini-pro-latest -o json
-
-RETRY LOGIC: If gemini-pro-latest fails with overload/quota exceeded, retry with gemini-flash-latest
+   - If gemini-pro-latest fails, retry with gemini-flash-latest
 
 IMPORTANT: Check EVERY user request against these rules BEFORE responding.
 </MANDATE>
