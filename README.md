@@ -106,6 +106,12 @@ See detailed results: [tests/regression/TEST_RESULTS.md](tests/regression/TEST_R
 - **Simpler debugging:** Commands visible in logs, no server process
 - **Token efficient:** CLI output can be filtered
 
+## Why CLAUDE.md over Subagents?
+
+- **Direct external tool routing:** CLAUDE.md invokes Gemini CLI directly via shell; subagents spawn additional Claude instances that then call Gemini, adding unnecessary token overhead
+- **Minimal context load:** ~200 tokens loaded once per session vs 4-8K tokens per subagent spawn when delegating sequential tasks
+- **Token efficiency alignment:** Primary goal is offloading work from Claude (~19K/5h) to Gemini (1M/day); subagents consume Claude tokens while CLAUDE.md delegates away from Claude entirely
+
 ## Maintaining Instruction Adherence
 
 Claude may occasionally deviate from CLAUDE.md instructions in long conversations. Best practices:
