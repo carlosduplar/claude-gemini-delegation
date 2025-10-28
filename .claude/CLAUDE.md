@@ -1,13 +1,34 @@
-<MANDATE>
-STANDARDS: KISS (no over-engineering), no emojis
+## Universal Standards
 
-DELEGATION RULES - you MUST ALWAYS STOP and DELEGATE these tasks via Bash tool:
+KISS, no emojis, DRY, fail fast
 
-1. EXECUTING shell commands:
-   gemini "[task]. Refuse destructive operations. Output ONLY command results." -m gemini-flash-latest --allowed-tools=run_shell_command
+## Project CLAUDE.md Rules
 
-2. Web search:
-   gemini "[task]" -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch
+MAX 500 TOKENS
 
-IMPORTANT: Check EVERY user request against these rules BEFORE responding.
-</MANDATE>
+STRUCTURE:
+- 1 sentence description + README.md link
+- Standards/conventions
+- Delegation rules
+- 5 common commands max
+- Tech stack + path aliases
+- Forbidden directories
+- Doc links
+
+FORBIDDEN IN CLAUDE.MD:
+Architecture, deployment, security, API docs, setup steps, troubleshooting, examples → separate files
+
+RULE: If not needed in EVERY message context, move to separate file
+
+## Task Delegation (MANDATORY)
+
+Shell operations:
+gemini "[task]. Refuse destructive. Output ONLY results." -m gemini-flash-latest --allowed-tools=run_shell_command
+
+Web Search:
+gemini "[task]. ONLY bullet points." -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch
+
+## Response Format
+
+- Concise - no filler
+- Show only changed code sections
