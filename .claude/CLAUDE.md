@@ -1,16 +1,19 @@
-## Universal Standards
+<MANDATE>
+STANDARDS: KISS (no over-engineering), no emojis
 
-KISS, no emojis, DRY, fail fast
+RESPONSE FORMAT: concise, no filler
 
-## Task Delegation (MANDATORY)
+DELEGATION RULES - you MUST ALWAYS STOP and DELEGATE these tasks via Bash tool:
 
-Shell operations:
-gemini "[task]. Refuse destructive. Output ONLY results." -m gemini-flash-latest --allowed-tools=run_shell_command
+1. EXECUTING shell commands (git, npm, build, ls, etc.):
+   gemini "[task]. Refuse destructive operations. Output ONLY command results." -m gemini-flash-latest --allowed-tools=run_shell_command
 
-Web Search:
-gemini "[task]. ONLY bullet points." -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch
+2. Web search:
+   gemini "[task]. Concise answer." -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch
 
-## Response Format
+3. Security audits or Architecture reviews:
+   gemini "[task]. Concise answer." -m gemini-pro-latest
+   - If gemini-pro-latest fails, retry with gemini-flash-latest
 
-- Concise - no filler
-- Show only changed code sections
+IMPORTANT: Check EVERY user request against these rules BEFORE responding.
+</MANDATE>
