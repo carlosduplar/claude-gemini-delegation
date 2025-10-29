@@ -42,7 +42,7 @@ CLAUDE.md enforces these token-saving patterns:
 - **500 token limit**: Keeps project rules minimal and deterministic
 
 ## Gemini CLI recommendations
-- Prefer [Gemini CLI extensions](https://geminicli.com/extensions/) over MCP/subagents for tool access. Extensions run locally and are token-efficient.
+- Prefer [Gemini CLI extensions](https://geminicli.com/extensions/) over MCP for tool access. Extensions run locally and are token-efficient.
 - Install recommended extensions/tools:
   - [context7](https://github.com/upstash/context7) (context management)
   - [chrome-devtools](https://github.com/ChromeDevTools/chrome-devtools-mcp) (browser debugging)
