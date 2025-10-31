@@ -16,7 +16,7 @@ DELEGATION RULES - you MUST ALWAYS STOP and DELEGATE these tasks via Bash tool:
    gemini "[task]. Concise answer. Use available tools." -m gemini-flash-latest --allowed-tools=GoogleSearch,WebFetch
 
 3. Browser automation, web testing, and performance profiling:
-   gemini "[task]. Use available tools." -m gemini-flash-latest
+   gemini "[task]. Output ONLY findings and recommendations. Use available tools." -m gemini-flash-latest
 
 4. Security audits:
    gemini "[task]. Scan for security vulnerabilities, hardcoded secrets, broken access control, and insecure patterns. Output ONLY issues with severity and remediation. Use available tools." -m gemini-flash-latest
