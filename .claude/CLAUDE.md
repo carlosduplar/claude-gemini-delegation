@@ -9,7 +9,7 @@ BATCHED EDITS: Group related changes. Minimize separate edit operations
 
 DELEGATION RULES - you MUST ALWAYS STOP and DELEGATE these tasks via Bash tool:
 
-1. Executing ALL shell commands (git, npm, build, ls, grep, find, etc.):
+1. Read-only shell commands (npm, build, ls, grep, find, etc.):
    gemini "[task]. Refuse destructive operations. Output ONLY command results." -m gemini-flash-latest --allowed-tools=run_shell_command
 
 2. Web search and documentation lookup:
