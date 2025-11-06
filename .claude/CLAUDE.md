@@ -1,5 +1,5 @@
 <MANDATE>
-STANDARDS: KISS (no over-engineering), no emojis
+STANDARDS: KISS, YAGNI, DRY. no emojis
 
 RESPONSE FORMAT: concise, no filler
 
