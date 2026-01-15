@@ -33,7 +33,9 @@ IMPORTANT: Check EVERY user request against these rules BEFORE responding. If it
 This project uses hybrid orchestration for token efficiency:
 
 **Orchestrator:** Claude Code (routing decisions, validation, user interaction)
-**Heavy Lifting:** Gemini CLI (large refactors, test generation, bulk operations)
+**Heavy Lifting:** 
+- Gemini CLI: `gemini "[task]" --allowed-tools=...`
+- Copilot CLI: `copilot --model claude-opus-4.5 -p "[task]" -s --allow-all-tools`
 
 ### Routing Rules
 Reference: `.claude/orchestrators/ORCHESTRATION_RULES.md`
