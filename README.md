@@ -1,85 +1,130 @@
-# Claude Code + Gemini CLI Delegation
+# Claude Code + CLI Delegation
 
-Automatically delegate high-token or tool-heavy tasks from Claude Code to Gemini CLI to preserve Claude token/quota and profit from Gemini's higher limits.
+Automatically delegate high-token tasks from Claude Code to external CLIs (Gemini, Copilot) to preserve Claude token quota.
 
 ## Why This Matters
-- 60-70% reduction in Claude token consumption
-- Claude Pro caps at ~19K tokens/5h; Gemini offers 1M tokens/day free tier
-- Clearer audit trail, simpler debugging, faster turnaround on large-context tasks
+- 40-60% reduction in Claude token consumption
+- Claude Pro caps at ~500K tokens/day; delegation offloads heavy lifting
+- Works with multiple CLI backends (Gemini, GitHub Copilot with Claude Opus 4.5)
 
-## Delegation Scope
-- Delegate tasks that require large context, external tools, or shell/file access.
-  - All shell commands (git, npm, build, ls, grep, find, etc.)
-  - Web search and documentation lookup
-  - Browser automation tasks
-  - Security audits
-- Claude handles single-file edits, straight code generation, architectural decisions, and small queries.
+## Project Structure
+
+```
+.claude/
+├── CLAUDE.md                    # Core delegation rules
+├── orchestrators/
+│   ├── ORCHESTRATION_RULES.md   # Routing decision tree
+│   └── VALIDATION_GATES.md      # Output validation gates
+├── tasks/                       # Execution inputs/outputs
+└── logs/                        # Audit trails + metrics
+```
 
 ## Quick Start
-1. Install/Update CLIs:
+
+1. **Install CLIs:**
 ```bash
-npm install -g @google/gemini-cli @anthropic-ai/claude-code
-```
-2. Place delegation rules:
-```bash
-cp .claude/CLAUDE.md /path/to/project/.claude/   # project
-cp .claude/CLAUDE.md ~/.claude/                # user-wide
-```
-3. Test:
-```bash
-cd /path/to/project && claude
-Ask a large-scope task (e.g., "Analyze the repository for performance issues")
+# Gemini CLI
+npm install -g @google/gemini-cli
+
+# GitHub Copilot CLI (for Claude Opus 4.5)
+# Install from: https://github.com/github/copilot-cli
 ```
 
-## CLAUDE.md Configuration
+2. **Copy delegation rules:**
+```bash
+cp -r .claude /path/to/project/
+```
 
-CLAUDE.md enforces these token-saving patterns:
+3. **Test delegation:**
+```bash
+# With Gemini
+gemini "List all TODO comments in this repo" --allowed-tools=run_shell_command
 
-- **KISS principle**: Prevents over-engineering
-- **Batched edits**: Groups related changes (~30% token savings)
-- **Concise responses**: "No filler" directive reduces verbose output
-- **Auto-delegation**: Routes shell/search/browser/security tasks to Gemini
-- **500 token limit**: Keeps project rules minimal and deterministic
+# With Copilot (Claude Opus 4.5)
+copilot --model claude-opus-4.5 -p "Refactor this function" -s --allow-all-tools
+```
 
-## Gemini CLI recommendations
-- Prefer [Gemini CLI extensions](https://geminicli.com/extensions/) over MCP for tool access. Extensions run locally and are token-efficient.
-- Install recommended extensions/tools:
-  - [context7](https://github.com/upstash/context7) (context management)
-  - [chrome-devtools](https://github.com/ChromeDevTools/chrome-devtools-mcp) (browser debugging)
-  - [securityServer](https://github.com/gemini-cli-extensions/security) from gemini-cli-security (for security checks)
+## Routing Rules
 
-## Additional Claude Optimization
-- Uninstall all MCP tools from Claude
-- Turn off auto-compact in /config
-- Avoid subagents: 5-10K token overhead per invocation
-- Use context management: /clear, /compact, and session restarts when Claude drifts from delegation rules.
+Tasks are routed based on 4 rules (see `.claude/orchestrators/ORCHESTRATION_RULES.md`):
+
+| Rule | Condition | Action |
+|------|-----------|--------|
+| Token Volume | >25K tokens + suitable type | DELEGATE |
+| Interaction | Requires back-and-forth | KEEP in Claude |
+| Criticality | Security/production code | KEEP in Claude |
+| Task Type | Refactor/test/docs | DELEGATE |
+
+## Validation Gates
+
+Delegated output is validated through 4 gates (see `.claude/orchestrators/VALIDATION_GATES.md`):
+
+1. **File Integrity** - Output exists, >100 bytes, readable
+2. **Structure** - Correct format, no placeholders
+3. **Content** - Valid syntax, reasonable length
+4. **Quality** - Spot-check 3 sections for logic/style
+
+## CLI Backends
+
+### Gemini CLI
+```bash
+gemini "[task]" --allowed-tools=run_shell_command,GoogleSearch
+```
+
+### Copilot CLI (Claude Opus 4.5)
+```bash
+copilot --model claude-opus-4.5 -p "[task]" -s --allow-all-tools --add-dir /path
+```
+
+Available models: `claude-opus-4.5`, `claude-sonnet-4.5`, `gpt-5`, `gemini-3-pro-preview`
 
 ## Examples
 
-**Delegated to Gemini:**
-- "Find all TODOs across the codebase" → Shell tools
-- "Test the login form and capture screenshots" → chrome-devtools extension if installed
-- "Perform security audit on auth module" → securityServer extension if installed
-- "Search React documentation for useEffect" → GoogleSearch + context7 extension if installed
+**Delegated:**
+- "Refactor src/api.js to async/await (50K tokens)" → CLI
+- "Generate unit tests for auth module" → CLI
+- "Find all security vulnerabilities" → CLI
 
-**Handled by Claude:**
-- "Write a function to parse JSON" → Direct code generation
-- "Refactor this function for readability" → Single-file edit
-- "Should I use Redis or PostgreSQL here?" → Architecture decision
+**Kept in Claude:**
+- "Write a utility function" → Small, fast
+- "Review this architecture decision" → Needs reasoning
+- "Fix this specific bug" → Interactive refinement
 
-## Delegation Testing
-- Run: ./tests/regression/run_tests.sh
+## Testing
+
+```bash
+# Run delegation test with Copilot CLI
+bash tests/test_copilot_delegation.sh
+
+# Run regression tests
+bash tests/regression/run_tests.sh
+```
+
+## Token Savings Example
+
+```
+Task: 50K token refactor
+
+Without delegation: 50K tokens (all in Claude)
+With delegation:    12K tokens (read input + read result + validate)
+
+Savings: 76%
+```
 
 ## Troubleshooting
 
-**Claude not delegating:**
-- Verify CLAUDE.md is in `.claude/` directory
-- Run `/clear` to reset context
+**Delegation not working:**
+- Verify `.claude/CLAUDE.md` exists
+- Run `/clear` in Claude to reset context
+
+**Copilot permission denied:**
+- Add `--add-dir /path/to/files` to allow file access
+- Or use `--allow-all-paths` for full access
 
 ## Support
 - Issues: https://github.com/carlosduplar/claude-gemini-delegation/issues
 - Discussions: https://github.com/carlosduplar/claude-gemini-delegation/discussions
 
---- 
+---
 
-**Last Updated:** October 29, 2025
+**Last Updated:** January 15, 2026
