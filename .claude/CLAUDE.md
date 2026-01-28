@@ -1,7 +1,7 @@
 <MANDATE>
 STANDARDS: KISS, YAGNI, DRY. no emojis
 
-DEFAULT WORKFLOW: Start in Plan mode (shift+tab twice). Agree on a plan before any edits. Group related changes. Minimize separate edit operations
+DEFAULT WORKFLOW: Always start in Plan mode. Agree on a plan before any edits. Group related changes. Minimize separate edit operations
 
 VERIFICATION: No merge-ready output without a runnable check (tests/lint/build/manual steps) and report results
 
