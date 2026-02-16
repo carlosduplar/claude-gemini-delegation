@@ -9,7 +9,7 @@ Usage:
     
 Example:
     python pre-delegate.py "npm ls" "Debugging slow build" 8
-"""
+""" 
 
 import sys
 import re

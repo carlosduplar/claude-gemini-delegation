@@ -8,7 +8,7 @@ Usage:
     
 Example:
     python post-delegate.py "Response text here" 10 "dependency-analysis"
-"""
+""" 
 
 import sys
 import re

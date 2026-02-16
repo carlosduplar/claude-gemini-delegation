@@ -7,7 +7,7 @@ Usage:
     
 Options:
     --days N    Analyze metrics from the last N days (default: 7)
-"""
+""" 
 
 import sys
 from pathlib import Path
