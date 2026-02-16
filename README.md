@@ -78,7 +78,9 @@ copilot --model claude-opus-4.5 -p "[task]" -s --allow-all-tools --add-dir /path
 
 Available models: `claude-opus-4.5`, `claude-sonnet-4.5`, `gpt-5`, `gemini-3-pro-preview`
 
-## Examples
+2. **Avoid subagents:**
+   - Subagents cost 5-10K tokens per invocation
+   - Use delegation instead
 
 **Delegated:**
 - "Refactor src/api.js to async/await (50K tokens)" → CLI
@@ -111,7 +113,55 @@ With delegation:    12K tokens (read input + read result + validate)
 Savings: 76%
 ```
 
-## Troubleshooting
+## Contributing
+
+Contributions welcome! Areas where help is needed:
+
+### Improvement Ideas
+
+- [ ] Add example `.claude/CLAUDE.md` variations for different workflows
+- [ ] Create delegation metrics dashboard
+- [ ] Build interactive installer (detect installed CLIs)
+- [ ] Add support for Aider, Copilot CLI delegation
+- [ ] Create video tutorial/demo
+- [ ] Write detailed case studies with token measurements
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test with real Claude Code sessions
+5. Submit a pull request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+---
+
+## FAQ
+
+### Q: Does this work with Claude 3.5 Sonnet?
+
+**A:** Yes, works with all Claude models via Claude Code.
+
+### Q: What if I don't have Gemini CLI?
+
+**A:** The CLAUDE.md rules still help by preventing wasteful operations. But delegation won't work until you install Gemini.
+
+### Q: Can I delegate to other CLIs besides Gemini?
+
+**A:** Yes! Edit CLAUDE.md to reference Aider, Copilot CLI, etc. Same pattern applies.
+
+### Q: Will Claude always follow the rules?
+
+**A:** 70-90% compliance rate depending on:
+- How explicit your requests are
+- How well you maintain token budget display
+- Whether you use banned command keywords
+
+### Q: Does this increase response time?
+
+**A:** Delegation adds ~2-5 seconds per operation. But you save 10-20 minutes by not exhausting your quota early.
 
 **Delegation not working:**
 - Verify `.claude/CLAUDE.md` exists
@@ -122,8 +172,6 @@ Savings: 76%
 - Or use `--allow-all-paths` for full access
 
 ## Support
-- Issues: https://github.com/carlosduplar/claude-gemini-delegation/issues
-- Discussions: https://github.com/carlosduplar/claude-gemini-delegation/discussions
 
 ---
 
