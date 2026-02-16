@@ -1,30 +1,58 @@
-<MANDATE>
-STANDARDS: KISS, YAGNI, DRY. no emojis
+# Token Quota Mode
 
-DEFAULT WORKFLOW: Always start in Plan mode. Agree on a plan before any edits. Group related changes. Minimize separate edit operations
+**Budget: 19K tokens per 5hr | Remaining: [User updates]**
 
-VERIFICATION: No merge-ready output without a runnable check (tests/lint/build/manual steps) and report results
+When quota exceeded = user cannot work. Preserve tokens for high-value reasoning.
 
-RESPONSE FORMAT: concise, no filler
+## BANNED Commands (Delegate or Refuse)
 
-PROJECT CLAUDE.md: Maximum 500 tokens. Commands, style rules, workflow essentials only
+- `npm ls`, `pip list`, `git log >5 commits`
+- `find`, `grep -r` (any recursive search)
+- Reading 3+ new files
+- Security scans
+- Output >500 lines
 
-DELEGATION RULES - you MUST ALWAYS STOP and DELEGATE these tasks via Bash tool:
+**No exceptions.**
 
-1. Read-only shell commands (npm, build, ls, grep, find, etc.):
-   gemini "[task]. Refuse destructive operations. Output ONLY command results and STOP." --allowed-tools=run_shell_command
+## Quick Check
 
-2. Web search and documentation lookup:
-   gemini "[task]. Concise answer. Use available tools." --allowed-tools=GoogleSearch,WebFetch
+1. >500 lines output? → DELEGATE
+2. 3+ new files? → DELEGATE
+3. Banned command? → DELEGATE
+4. Security/audit? → DELEGATE
+5. Already in context? → Handle directly
 
-3. Browser automation, web testing, and performance profiling:
-   gemini "[task]. Use available tools. Output ONLY findings and recommendations and STOP."
+## Delegation Format
 
-4. Security audits:
-   gemini "[task]. Scan for security vulnerabilities, hardcoded secrets, broken access control, and insecure patterns. Use available tools. Output ONLY issues with severity and remediation and STOP."
+```bash
+PROMPT=$(python .claude/hooks/pre-delegate.py "CMD" "CONTEXT" LINES)
+gemini -p "$PROMPT"
+```
 
-5. Code review (quality and patterns):
-   gemini "[task]. Review code for quality, readability, logic errors, and best practices. Use available tools. Output ONLY findings and recommendations and STOP."
+## Examples
 
-IMPORTANT: Check EVERY user request against these rules BEFORE responding. If it matches delegation rules 1-5, STOP and delegate immediately.
-</MANDATE>
+```bash
+# Dependencies (banned)
+PROMPT=$(python .claude/hooks/pre-delegate.py "npm ls" "Build check" 8)
+gemini -p "$PROMPT"
+
+# Security scan (banned)
+PROMPT=$(python .claude/hooks/pre-delegate.py "grep -r password src/" "Audit" 6)
+gemini -p "$PROMPT"
+```
+
+## Cost Math
+
+- Read 2K lines yourself: 2,000 tokens from quota
+- Delegate to Gemini: 150 tokens from quota
+- **Gemini has unlimited tokens. User has 19K. Use Gemini's.**
+
+## Handle Directly Only:
+
+- Single-file edit (in context)
+- Architecture decision (no new data)
+- Clarification (<50 tokens)
+
+## If You Break Rules
+
+Executing banned commands = you failed. User loses tokens for complex work later.
